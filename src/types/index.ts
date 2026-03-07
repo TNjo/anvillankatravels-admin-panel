@@ -26,6 +26,7 @@ export interface Tour {
   highlights: string[];
   placesToStay: PlaceToStay[];
   itinerary: TourDay[];
+  parentTourName?: string;
   createdAt?: string;
   updatedAt?: string;
   published?: boolean;
