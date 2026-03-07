@@ -23,14 +23,14 @@ export default function BookingsPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const fetchBookings = async () => {
+  const fetchBookings = async (status?: string) => {
+    setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch("/api/bookings", {
+      const url = status && status !== "all"
+        ? `/api/bookings?status=${status}`
+        : "/api/bookings";
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -43,6 +43,10 @@ export default function BookingsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchBookings(filterStatus);
+  }, [filterStatus]);
 
   const updateStatus = async (id: string, status: string) => {
     try {
@@ -57,7 +61,11 @@ export default function BookingsPage() {
       });
 
       if (res.ok) {
-        setBookings(bookings.map((b) => (b.id === id ? { ...b, status: status as Booking["status"] } : b)));
+        if (filterStatus !== "all" && status !== filterStatus) {
+          setBookings(bookings.filter((b) => b.id !== id));
+        } else {
+          setBookings(bookings.map((b) => (b.id === id ? { ...b, status: status as Booking["status"] } : b)));
+        }
         toast.success(`Booking ${status}`);
       }
     } catch {
@@ -66,12 +74,13 @@ export default function BookingsPage() {
   };
 
   const filteredBookings = bookings.filter((b) => {
-    const matchesSearch =
-      b.customerName?.toLowerCase().includes(search.toLowerCase()) ||
-      b.tourName?.toLowerCase().includes(search.toLowerCase()) ||
-      b.customerEmail?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = filterStatus === "all" || b.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      b.customerName?.toLowerCase().includes(q) ||
+      b.tourName?.toLowerCase().includes(q) ||
+      b.customerEmail?.toLowerCase().includes(q)
+    );
   });
 
   return (

@@ -13,17 +13,19 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
 
-    const snapshot = await adminDb.collection(COLLECTION).get();
-    let bookings = snapshot.docs.map((doc) => ({
+    let query: FirebaseFirestore.Query = adminDb
+      .collection(COLLECTION)
+      .orderBy("createdAt", "desc");
+
+    if (status) {
+      query = query.where("status", "==", status);
+    }
+
+    const snapshot = await query.get();
+    const bookings = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as Booking[];
-
-    if (status) {
-      bookings = bookings.filter((b) => b.status === status);
-    }
-
-    bookings.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 
     return Response.json(bookings);
   } catch (error) {

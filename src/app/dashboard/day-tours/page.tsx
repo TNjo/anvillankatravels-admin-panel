@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Sun } from "lucide-react";
@@ -12,11 +12,17 @@ export default function DayToursPage() {
   const [tours, setTours] = useState<DayTour[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const debounceRef = useRef<NodeJS.Timeout>();
 
-  const fetchDayTours = async () => {
+  const fetchDayTours = useCallback(async (searchQuery?: string) => {
     try {
       const token = await getToken();
-      const res = await fetch("/api/day-tours", {
+      const params = new URLSearchParams();
+      if (searchQuery) params.set("search", searchQuery);
+      const url = params.toString()
+        ? `/api/day-tours?${params}`
+        : "/api/day-tours";
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -28,11 +34,21 @@ export default function DayToursPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     fetchDayTours();
   }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchDayTours(search || undefined);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [search, fetchDayTours]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this day tour?")) return;
@@ -80,9 +96,7 @@ export default function DayToursPage() {
     }
   };
 
-  const filteredTours = tours.filter((t) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTours = tours;
 
   return (
     <div className="space-y-6">

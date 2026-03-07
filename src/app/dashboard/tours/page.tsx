@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Map as MapIcon, ChevronDown, ChevronRight, Package } from "lucide-react";
@@ -13,11 +13,14 @@ export default function ToursPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
+  const debounceRef = useRef<NodeJS.Timeout>();
 
-  const fetchTours = async () => {
+  const fetchTours = useCallback(async (searchQuery?: string) => {
     try {
       const token = await getToken();
-      const res = await fetch("/api/tours?all=true", {
+      const params = new URLSearchParams({ all: "true" });
+      if (searchQuery) params.set("search", searchQuery);
+      const res = await fetch(`/api/tours?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -29,11 +32,21 @@ export default function ToursPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     fetchTours();
   }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchTours(search || undefined);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [search, fetchTours]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this tour?")) return;
@@ -91,10 +104,6 @@ export default function ToursPage() {
     subPackageMap.set(t.parentTourName!, list);
   });
 
-  const filteredTours = parentTours.filter((t) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   const toggleExpand = (tourName: string) => {
     setExpandedParents((prev) => {
       const next = new Set(prev);
@@ -139,7 +148,7 @@ export default function ToursPage() {
             </div>
           ))}
         </div>
-      ) : filteredTours.length === 0 ? (
+      ) : parentTours.length === 0 ? (
         <div className="card flex flex-col items-center justify-center py-12 text-center">
           <MapIcon className="mb-4 h-12 w-12 text-gray-300" />
           <h3 className="text-lg font-medium text-gray-900">No tours found</h3>
@@ -149,7 +158,7 @@ export default function ToursPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredTours.map((tour) => {
+          {parentTours.map((tour) => {
             const subs = subPackageMap.get(tour.name) || [];
             const isExpanded = expandedParents.has(tour.name);
             return (

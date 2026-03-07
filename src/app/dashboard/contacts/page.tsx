@@ -23,14 +23,14 @@ export default function ContactsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selected, setSelected] = useState<Contact | null>(null);
 
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  const fetchContacts = async () => {
+  const fetchContacts = async (status?: string) => {
+    setLoading(true);
     try {
       const token = await getToken();
-      const res = await fetch("/api/contacts", {
+      const url = status && status !== "all"
+        ? `/api/contacts?status=${status}`
+        : "/api/contacts";
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -43,6 +43,10 @@ export default function ContactsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchContacts(filterStatus);
+  }, [filterStatus]);
 
   const markAsRead = async (contact: Contact) => {
     if (contact.status !== "unread") return;
@@ -58,11 +62,15 @@ export default function ContactsPage() {
         body: JSON.stringify({ status: "read" }),
       });
 
-      setContacts(
-        contacts.map((c) =>
-          c.id === contact.id ? { ...c, status: "read" } : c
-        )
-      );
+      if (filterStatus === "unread") {
+        setContacts(contacts.filter((c) => c.id !== contact.id));
+      } else {
+        setContacts(
+          contacts.map((c) =>
+            c.id === contact.id ? { ...c, status: "read" } : c
+          )
+        );
+      }
     } catch {
       console.error("Failed to mark as read");
     }
@@ -94,12 +102,13 @@ export default function ContactsPage() {
   };
 
   const filteredContacts = contacts.filter((c) => {
-    const matchesSearch =
-      c.name?.toLowerCase().includes(search.toLowerCase()) ||
-      c.email?.toLowerCase().includes(search.toLowerCase()) ||
-      c.subject?.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = filterStatus === "all" || c.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      c.name?.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.subject?.toLowerCase().includes(q)
+    );
   });
 
   return (
