@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const publishedOnly = searchParams.get("published") === "true";
+    const parentTourName = searchParams.get("parentTourName");
+    const includeAll = searchParams.get("all") === "true";
 
     const snapshot = await adminDb.collection(COLLECTION).get();
     let tours = snapshot.docs.map((doc) => ({
@@ -18,6 +20,16 @@ export async function GET(request: NextRequest) {
 
     if (publishedOnly) {
       tours = tours.filter((t) => t.published === true);
+    }
+
+    if (!includeAll) {
+      if (parentTourName) {
+        // Return only sub-packages matching the parent tour name
+        tours = tours.filter((t) => t.parentTourName === parentTourName);
+      } else {
+        // Exclude sub-packages from the main tour listing
+        tours = tours.filter((t) => !t.parentTourName);
+      }
     }
 
     tours.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));

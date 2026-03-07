@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Map } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Map as MapIcon, ChevronDown, ChevronRight, Package } from "lucide-react";
 import { toast } from "sonner";
 import type { Tour } from "@/types";
 
@@ -12,11 +12,12 @@ export default function ToursPage() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
 
   const fetchTours = async () => {
     try {
       const token = await getToken();
-      const res = await fetch("/api/tours", {
+      const res = await fetch("/api/tours?all=true", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -82,9 +83,26 @@ export default function ToursPage() {
     }
   };
 
-  const filteredTours = tours.filter((t) =>
+  const parentTours = tours.filter((t) => !t.parentTourName);
+  const subPackageMap = new Map<string, Tour[]>();
+  tours.filter((t) => t.parentTourName).forEach((t) => {
+    const list = subPackageMap.get(t.parentTourName!) || [];
+    list.push(t);
+    subPackageMap.set(t.parentTourName!, list);
+  });
+
+  const filteredTours = parentTours.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const toggleExpand = (tourName: string) => {
+    setExpandedParents((prev) => {
+      const next = new Set(prev);
+      if (next.has(tourName)) next.delete(tourName);
+      else next.add(tourName);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -123,7 +141,7 @@ export default function ToursPage() {
         </div>
       ) : filteredTours.length === 0 ? (
         <div className="card flex flex-col items-center justify-center py-12 text-center">
-          <Map className="mb-4 h-12 w-12 text-gray-300" />
+          <MapIcon className="mb-4 h-12 w-12 text-gray-300" />
           <h3 className="text-lg font-medium text-gray-900">No tours found</h3>
           <p className="mt-1 text-sm text-gray-500">
             {search ? "Try a different search term" : "Get started by adding your first tour"}
@@ -131,60 +149,137 @@ export default function ToursPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredTours.map((tour) => (
-            <div key={tour.id} className="card">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {tour.name}
-                    </h3>
-                    {tour.published ? (
-                      <span className="badge-success">Published</span>
-                    ) : (
-                      <span className="badge-neutral">Draft</span>
-                    )}
+          {filteredTours.map((tour) => {
+            const subs = subPackageMap.get(tour.name) || [];
+            const isExpanded = expandedParents.has(tour.name);
+            return (
+              <div key={tour.id}>
+                <div className="card">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {tour.name}
+                        </h3>
+                        {tour.published ? (
+                          <span className="badge-success">Published</span>
+                        ) : (
+                          <span className="badge-neutral">Draft</span>
+                        )}
+                        {subs.length > 0 && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                            <Package className="h-3 w-3" />
+                            {subs.length} sub-packages
+                          </span>
+                        )}
+                      </div>
+                      {subs.length === 0 && (
+                        <p className="mt-1 text-sm text-gray-500">
+                          {tour.duration.days} days / {tour.duration.nights} nights
+                        </p>
+                      )}
+                      <p className="mt-2 line-clamp-2 text-sm text-gray-600">
+                        {tour.summary}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {tour.tags?.map((tag) => (
+                          <span key={tag} className="badge-info">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="ml-4 flex items-center gap-2">
+                      {subs.length > 0 && (
+                        <button
+                          onClick={() => toggleExpand(tour.name)}
+                          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                          title={isExpanded ? "Hide sub-packages" : "Show sub-packages"}
+                        >
+                          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => togglePublish(tour)}
+                        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                        title={tour.published ? "Unpublish" : "Publish"}
+                      >
+                        {tour.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                      <Link
+                        href={`/dashboard/tours/${tour.id}/edit`}
+                        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-blue-600"
+                        title="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(tour.id)}
+                        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-red-600"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {tour.duration.days} days / {tour.duration.nights} nights
-                  </p>
-                  <p className="mt-2 line-clamp-2 text-sm text-gray-600">
-                    {tour.summary}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {tour.tags?.map((tag) => (
-                      <span key={tag} className="badge-info">
-                        {tag}
-                      </span>
+                </div>
+
+                {/* Sub-packages */}
+                {isExpanded && subs.length > 0 && (
+                  <div className="ml-6 mt-2 space-y-2 border-l-2 border-blue-200 pl-4">
+                    {subs.map((sub) => (
+                      <div key={sub.id} className="card bg-blue-50/50">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <Package className="h-4 w-4 text-blue-500" />
+                              <h4 className="text-base font-semibold text-gray-900">
+                                {sub.name}
+                              </h4>
+                              {sub.published ? (
+                                <span className="badge-success">Published</span>
+                              ) : (
+                                <span className="badge-neutral">Draft</span>
+                              )}
+                            </div>
+                            <p className="mt-1 text-sm text-gray-500">
+                              {sub.duration.days} days / {sub.duration.nights} nights
+                            </p>
+                            <p className="mt-1 line-clamp-1 text-sm text-gray-600">
+                              {sub.summary}
+                            </p>
+                          </div>
+                          <div className="ml-4 flex items-center gap-2">
+                            <button
+                              onClick={() => togglePublish(sub)}
+                              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white hover:text-gray-600"
+                              title={sub.published ? "Unpublish" : "Publish"}
+                            >
+                              {sub.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                            <Link
+                              href={`/dashboard/tours/${sub.id}/edit`}
+                              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white hover:text-blue-600"
+                              title="Edit"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(sub.id)}
+                              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white hover:text-red-600"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
-                </div>
-                <div className="ml-4 flex items-center gap-2">
-                  <button
-                    onClick={() => togglePublish(tour)}
-                    className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-                    title={tour.published ? "Unpublish" : "Publish"}
-                  >
-                    {tour.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                  <Link
-                    href={`/dashboard/tours/${tour.id}/edit`}
-                    className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-blue-600"
-                    title="Edit"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(tour.id)}
-                    className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-red-600"
-                    title="Delete"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

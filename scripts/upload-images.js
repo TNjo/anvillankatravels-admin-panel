@@ -136,6 +136,38 @@ const IMAGE_MAP = {
   "/images/hotels/anantara-peace-haven.jpg": "package 5/Hotel/Anantara Peace Haven Resort.jpg",
   "/images/hotels/amangalla.webp": "package 5/Hotel/Amangalla.webp",
 
+  // ========== CLASSIC & CULTURAL SUB-PACKAGES ==========
+  // 5-Day Package
+  "/images/tours/classic-5d/sigiriya.jpg": "Package 1/sigiriyamain.jpg",
+  "/images/tours/classic-5d/sigiriya-sunset.jpg": "Package 1/sigiriya.jpg",
+  "/images/tours/classic-5d/cultural-village.jpg": "sri-lankan-food.jpg",
+  "/images/tours/classic-5d/kandy.jpg": "Package 1/Kandy.jpg",
+  "/images/tours/classic-5d/beach.jpg": "kalpitiya-beach-sunset.jpg",
+  "/images/tours/classic-5d/galle-fort.jpg": "Package 1/galle_fort.jpg",
+
+  // 7-Day Package
+  "/images/tours/classic-7d/train.jpg": "train-scenic.jpg",
+  "/images/tours/classic-7d/sigiriya.jpg": "Package 1/sigiriya.jpg",
+  "/images/tours/classic-7d/kandy.jpg": "Package 3/Exploring Kandy.jpg",
+  "/images/tours/classic-7d/tea-country.jpg": "Package 1/Tea country.jpg",
+  "/images/tours/classic-7d/train-ride.jpg": "train-scenic.jpg",
+  "/images/tours/classic-7d/yala-safari.jpg": "Package 1/yala safari 5.jpg",
+  "/images/tours/classic-7d/galle-fort.jpg": "package02/galle-fort.jpeg",
+  "/images/tours/classic-7d/colombo.jpg": "Package 1/colombo.jpeg",
+
+  // 10-Day Package
+  "/images/tours/classic-10d/elephants.jpg": "elephants-herd.jpg",
+  "/images/tours/classic-10d/negombo.jpg": "Package 3/Negambo.jpg",
+  "/images/tours/classic-10d/sigiriya.jpg": "Package 1/sigiriyamain.jpg",
+  "/images/tours/classic-10d/minneriya.jpg": "package 5/Minneriya.webp",
+  "/images/tours/classic-10d/kandy.jpg": "Package 1/Kandy.jpg",
+  "/images/tours/classic-10d/nuwara-eliya.jpg": "package02/nuwra-eliya.webp",
+  "/images/tours/classic-10d/train.jpg": "train-scenic.jpg",
+  "/images/tours/classic-10d/yala.jpg": "Package 1/yala safari 5.jpg",
+  "/images/tours/classic-10d/mirissa.jpg": "Package 3/Mirissa.jpg",
+  "/images/tours/classic-10d/galle-fort.jpg": "Package 1/galle_fort.jpg",
+  "/images/tours/classic-10d/colombo.jpg": "Package 1/colombo.jpeg",
+
   // ========== DAY TOURS ==========
   "/images/day-tours/colombo/buddha-reflection.jpg": "buddha-reflection.jpg",
   "/images/day-tours/colombo/elephants-herd.jpg": "elephants-herd.jpg",

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { ArrowLeft, Plus, Trash2, Save, GripVertical } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Plus, Trash2, Save, GripVertical, Package, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import type { Tour, TourDay, PlaceToStay } from "@/types";
 import ImageUpload from "@/components/ImageUpload";
@@ -31,6 +32,7 @@ export default function EditTourPage() {
 
   const [placesToStay, setPlacesToStay] = useState<PlaceToStay[]>([]);
   const [itinerary, setItinerary] = useState<TourDay[]>([]);
+  const [subPackages, setSubPackages] = useState<Tour[]>([]);
 
   useEffect(() => {
     async function fetchTour() {
@@ -62,6 +64,16 @@ export default function EditTourPage() {
               }))
             : [{ day: 1, title: "", description: "", image: "", location: "", activities: [""] }]
         );
+
+        // Fetch sub-packages if this is a parent tour (no parentTourName)
+        if (!tour.parentTourName) {
+          const subRes = await fetch(`/api/tours?parentTourName=${encodeURIComponent(tour.name)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (subRes.ok) {
+            setSubPackages(await subRes.json());
+          }
+        }
       } catch {
         toast.error("Failed to load tour");
         router.push("/dashboard/tours");
@@ -183,16 +195,18 @@ export default function EditTourPage() {
             <label className="mb-1.5 block text-sm font-medium text-gray-700">Tour Name</label>
             <input type="text" className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Days</label>
-              <input type="number" className="input" min={1} value={form.days} onChange={(e) => setForm({ ...form, days: parseInt(e.target.value) || 1 })} />
+          {subPackages.length === 0 && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">Days</label>
+                <input type="number" className="input" min={1} value={form.days} onChange={(e) => setForm({ ...form, days: parseInt(e.target.value) || 1 })} />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">Nights</label>
+                <input type="number" className="input" min={0} value={form.nights} onChange={(e) => setForm({ ...form, nights: parseInt(e.target.value) || 0 })} />
+              </div>
             </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Nights</label>
-              <input type="number" className="input" min={0} value={form.nights} onChange={(e) => setForm({ ...form, nights: parseInt(e.target.value) || 0 })} />
-            </div>
-          </div>
+          )}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">Summary</label>
             <textarea className="input min-h-[120px]" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} required />
@@ -208,6 +222,47 @@ export default function EditTourPage() {
             <label htmlFor="published" className="text-sm font-medium text-gray-700">Published</label>
           </div>
         </div>
+
+        {/* Sub-Packages */}
+        {subPackages.length > 0 && (
+          <div className="card space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-blue-500" />
+                <h2 className="text-lg font-semibold">Sub-Packages ({subPackages.length})</h2>
+              </div>
+            </div>
+            <p className="text-sm text-gray-500">
+              These packages are shown as options when users click &quot;View Packages&quot; on this tour.
+            </p>
+            <div className="space-y-3">
+              {subPackages.map((sub) => (
+                <div key={sub.id} className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50/50 p-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-gray-900">{sub.name}</h4>
+                      {sub.published ? (
+                        <span className="badge-success">Published</span>
+                      ) : (
+                        <span className="badge-neutral">Draft</span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-sm text-gray-500">
+                      {sub.duration.days} days / {sub.duration.nights} nights &middot; {sub.route?.join(" → ")}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/dashboard/tours/${sub.id}/edit`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-blue-600 shadow-sm transition-colors hover:bg-blue-50"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Route */}
         <div className="card space-y-4">
@@ -240,112 +295,118 @@ export default function EditTourPage() {
           </div>
         </div>
 
-        {/* Highlights */}
-        <div className="card space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Highlights</h2>
-            <button type="button" onClick={() => addArrayItem("highlights")} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add</button>
-          </div>
-          {form.highlights.map((h, i) => (
-            <div key={i} className="flex gap-2">
-              <input className="input flex-1" value={h} onChange={(e) => updateArrayItem("highlights", i, e.target.value)} placeholder="Highlight" />
-              {form.highlights.length > 1 && <button type="button" onClick={() => removeArrayItem("highlights", i)} className="p-2 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
+        {/* Highlights — hidden for parent tours with sub-packages */}
+        {subPackages.length === 0 && (
+          <div className="card space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Highlights</h2>
+              <button type="button" onClick={() => addArrayItem("highlights")} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add</button>
             </div>
-          ))}
-        </div>
+            {form.highlights.map((h, i) => (
+              <div key={i} className="flex gap-2">
+                <input className="input flex-1" value={h} onChange={(e) => updateArrayItem("highlights", i, e.target.value)} placeholder="Highlight" />
+                {form.highlights.length > 1 && <button type="button" onClick={() => removeArrayItem("highlights", i)} className="p-2 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* Places to Stay */}
-        <div className="card space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Places to Stay</h2>
-            <button type="button" onClick={() => setPlacesToStay([...placesToStay, { location: "", hotel: "", type: "" }])} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Place</button>
-          </div>
-          {placesToStay.map((place, i) => (
-            <div key={i} className="space-y-2 rounded-lg border border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-500">Hotel #{i + 1}</span>
-                {placesToStay.length > 1 && <button type="button" onClick={() => setPlacesToStay(placesToStay.filter((_, idx) => idx !== i))} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs text-gray-500">Location</label>
-                  <input className="input" value={place.location} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], location: e.target.value }; setPlacesToStay(u); }} />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-gray-500">Hotel Name</label>
-                  <input className="input" value={place.hotel} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], hotel: e.target.value }; setPlacesToStay(u); }} />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-gray-500">Type</label>
-                  <input className="input" value={place.type} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], type: e.target.value }; setPlacesToStay(u); }} />
-                </div>
-              </div>
-              <ImageUpload
-                label="Hotel Image"
-                value={place.image || ""}
-                onChange={(url) => { const u = [...placesToStay]; u[i] = { ...u[i], image: url }; setPlacesToStay(u); }}
-                folder="hotels"
-              />
+        {/* Places to Stay — hidden for parent tours with sub-packages */}
+        {subPackages.length === 0 && (
+          <div className="card space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Places to Stay</h2>
+              <button type="button" onClick={() => setPlacesToStay([...placesToStay, { location: "", hotel: "", type: "" }])} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Place</button>
             </div>
-          ))}
-        </div>
+            {placesToStay.map((place, i) => (
+              <div key={i} className="space-y-2 rounded-lg border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-500">Hotel #{i + 1}</span>
+                  {placesToStay.length > 1 && <button type="button" onClick={() => setPlacesToStay(placesToStay.filter((_, idx) => idx !== i))} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Location</label>
+                    <input className="input" value={place.location} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], location: e.target.value }; setPlacesToStay(u); }} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Hotel Name</label>
+                    <input className="input" value={place.hotel} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], hotel: e.target.value }; setPlacesToStay(u); }} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Type</label>
+                    <input className="input" value={place.type} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], type: e.target.value }; setPlacesToStay(u); }} />
+                  </div>
+                </div>
+                <ImageUpload
+                  label="Hotel Image"
+                  value={place.image || ""}
+                  onChange={(url) => { const u = [...placesToStay]; u[i] = { ...u[i], image: url }; setPlacesToStay(u); }}
+                  folder="hotels"
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* Itinerary */}
-        <div className="card space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Itinerary ({itinerary.length} days)</h2>
-            <button type="button" onClick={() => setItinerary([...itinerary, { day: itinerary.length + 1, title: "", description: "", image: "", location: "", activities: [""] }])} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Day</button>
-          </div>
-          {itinerary.map((day, i) => (
-            <div key={i} className="space-y-3 rounded-lg border border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-gray-300" />
-                  <h3 className="text-sm font-semibold text-primary-700">Day {day.day}</h3>
-                </div>
-                {itinerary.length > 1 && <button type="button" onClick={() => setItinerary(itinerary.filter((_, idx) => idx !== i))} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs text-gray-500">Title</label>
-                  <input className="input" value={day.title} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], title: e.target.value }; setItinerary(u); }} />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-gray-500">Location</label>
-                  <input className="input" value={day.location} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], location: e.target.value }; setItinerary(u); }} />
-                </div>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-gray-500">Description</label>
-                <textarea className="input min-h-[80px]" value={day.description} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], description: e.target.value }; setItinerary(u); }} />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-gray-500">Accommodation</label>
-                <input className="input" value={day.accommodation || ""} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], accommodation: e.target.value }; setItinerary(u); }} />
-              </div>
-              <ImageUpload
-                label="Day Image"
-                value={day.image}
-                onChange={(url) => { const u = [...itinerary]; u[i] = { ...u[i], image: url }; setItinerary(u); }}
-                folder={`tours/${tourId}`}
-              />
-              <div>
-                <div className="mb-1 flex items-center justify-between">
-                  <label className="text-xs text-gray-500">Activities</label>
-                  <button type="button" onClick={() => addItineraryActivity(i)} className="text-xs text-primary-600 hover:text-primary-700">+ Add</button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(day.activities || [""]).map((act, ai) => (
-                    <div key={ai} className="flex items-center gap-1">
-                      <input className="input w-44" value={act} onChange={(e) => updateItineraryActivity(i, ai, e.target.value)} placeholder="Activity" />
-                      {(day.activities || []).length > 1 && <button type="button" onClick={() => removeItineraryActivity(i, ai)} className="p-0.5 text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>}
-                    </div>
-                  ))}
-                </div>
-              </div>
+        {/* Itinerary — hidden for parent tours with sub-packages */}
+        {subPackages.length === 0 && (
+          <div className="card space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Itinerary ({itinerary.length} days)</h2>
+              <button type="button" onClick={() => setItinerary([...itinerary, { day: itinerary.length + 1, title: "", description: "", image: "", location: "", activities: [""] }])} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Day</button>
             </div>
-          ))}
-        </div>
+            {itinerary.map((day, i) => (
+              <div key={i} className="space-y-3 rounded-lg border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <GripVertical className="h-4 w-4 text-gray-300" />
+                    <h3 className="text-sm font-semibold text-primary-700">Day {day.day}</h3>
+                  </div>
+                  {itinerary.length > 1 && <button type="button" onClick={() => setItinerary(itinerary.filter((_, idx) => idx !== i))} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Title</label>
+                    <input className="input" value={day.title} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], title: e.target.value }; setItinerary(u); }} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-gray-500">Location</label>
+                    <input className="input" value={day.location} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], location: e.target.value }; setItinerary(u); }} />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Description</label>
+                  <textarea className="input min-h-[80px]" value={day.description} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], description: e.target.value }; setItinerary(u); }} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Accommodation</label>
+                  <input className="input" value={day.accommodation || ""} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], accommodation: e.target.value }; setItinerary(u); }} />
+                </div>
+                <ImageUpload
+                  label="Day Image"
+                  value={day.image}
+                  onChange={(url) => { const u = [...itinerary]; u[i] = { ...u[i], image: url }; setItinerary(u); }}
+                  folder={`tours/${tourId}`}
+                />
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <label className="text-xs text-gray-500">Activities</label>
+                    <button type="button" onClick={() => addItineraryActivity(i)} className="text-xs text-primary-600 hover:text-primary-700">+ Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(day.activities || [""]).map((act, ai) => (
+                      <div key={ai} className="flex items-center gap-1">
+                        <input className="input w-44" value={act} onChange={(e) => updateItineraryActivity(i, ai, e.target.value)} placeholder="Activity" />
+                        {(day.activities || []).length > 1 && <button type="button" onClick={() => removeItineraryActivity(i, ai)} className="p-0.5 text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex justify-end gap-3">
           <button type="button" onClick={() => router.back()} className="btn-secondary">Cancel</button>
