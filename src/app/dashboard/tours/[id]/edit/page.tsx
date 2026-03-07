@@ -1,0 +1,355 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
+import { ArrowLeft, Plus, Trash2, Save, GripVertical } from "lucide-react";
+import { toast } from "sonner";
+import type { Tour, TourDay, PlaceToStay } from "@/types";
+
+export default function EditTourPage() {
+  const { getToken } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const tourId = params.id as string;
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    days: 1,
+    nights: 0,
+    summary: "",
+    route: [""],
+    tags: [""],
+    heroImage: "",
+    highlights: [""],
+    published: false,
+  });
+
+  const [placesToStay, setPlacesToStay] = useState<PlaceToStay[]>([]);
+  const [itinerary, setItinerary] = useState<TourDay[]>([]);
+
+  useEffect(() => {
+    async function fetchTour() {
+      try {
+        const token = await getToken();
+        const res = await fetch(`/api/tours/${tourId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Not found");
+        const tour: Tour = await res.json();
+
+        setForm({
+          name: tour.name || "",
+          days: tour.duration?.days || 1,
+          nights: tour.duration?.nights || 0,
+          summary: tour.summary || "",
+          route: tour.route?.length ? tour.route : [""],
+          tags: tour.tags?.length ? tour.tags : [""],
+          heroImage: tour.heroImage || "",
+          highlights: tour.highlights?.length ? tour.highlights : [""],
+          published: tour.published ?? false,
+        });
+        setPlacesToStay(tour.placesToStay?.length ? tour.placesToStay : [{ location: "", hotel: "", type: "" }]);
+        setItinerary(
+          tour.itinerary?.length
+            ? tour.itinerary.map((d) => ({
+                ...d,
+                activities: d.activities?.length ? d.activities : [""],
+              }))
+            : [{ day: 1, title: "", description: "", image: "", location: "", activities: [""] }]
+        );
+      } catch {
+        toast.error("Failed to load tour");
+        router.push("/dashboard/tours");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTour();
+  }, [tourId]);
+
+  const addArrayItem = (field: "route" | "tags" | "highlights") => {
+    setForm({ ...form, [field]: [...form[field], ""] });
+  };
+
+  const updateArrayItem = (field: "route" | "tags" | "highlights", index: number, value: string) => {
+    const updated = [...form[field]];
+    updated[index] = value;
+    setForm({ ...form, [field]: updated });
+  };
+
+  const removeArrayItem = (field: "route" | "tags" | "highlights", index: number) => {
+    if (form[field].length <= 1) return;
+    setForm({ ...form, [field]: form[field].filter((_, i) => i !== index) });
+  };
+
+  const updateItineraryActivity = (dayIdx: number, actIdx: number, value: string) => {
+    const updated = [...itinerary];
+    const activities = [...(updated[dayIdx].activities || [])];
+    activities[actIdx] = value;
+    updated[dayIdx] = { ...updated[dayIdx], activities };
+    setItinerary(updated);
+  };
+
+  const addItineraryActivity = (dayIdx: number) => {
+    const updated = [...itinerary];
+    updated[dayIdx] = { ...updated[dayIdx], activities: [...(updated[dayIdx].activities || []), ""] };
+    setItinerary(updated);
+  };
+
+  const removeItineraryActivity = (dayIdx: number, actIdx: number) => {
+    const updated = [...itinerary];
+    const activities = (updated[dayIdx].activities || []).filter((_, i) => i !== actIdx);
+    updated[dayIdx] = { ...updated[dayIdx], activities: activities.length ? activities : [""] };
+    setItinerary(updated);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      const token = await getToken();
+      const tourData: Partial<Tour> = {
+        name: form.name,
+        duration: { days: form.days, nights: form.nights },
+        summary: form.summary,
+        route: form.route.filter(Boolean),
+        tags: form.tags.filter(Boolean),
+        heroImage: form.heroImage,
+        highlights: form.highlights.filter(Boolean),
+        published: form.published,
+        placesToStay: placesToStay.filter((p) => p.location || p.hotel),
+        itinerary: itinerary
+          .filter((i) => i.title)
+          .map((d) => ({ ...d, activities: (d.activities || []).filter(Boolean) })),
+      };
+
+      const res = await fetch(`/api/tours/${tourId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(tourData),
+      });
+
+      if (res.ok) {
+        toast.success("Tour updated successfully");
+        router.push("/dashboard/tours");
+      } else {
+        toast.error("Failed to update tour");
+      }
+    } catch {
+      toast.error("Failed to update tour");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="flex items-center gap-4">
+        <button onClick={() => router.back()} className="rounded-lg p-2 hover:bg-gray-100">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-gray-900">Edit Tour</h1>
+          <p className="text-sm text-gray-500">{form.name}</p>
+        </div>
+        <button onClick={handleSubmit} disabled={saving} className="btn-primary">
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <div className="card space-y-4">
+          <h2 className="text-lg font-semibold">Basic Information</h2>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Tour Name</label>
+            <input type="text" className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Days</label>
+              <input type="number" className="input" min={1} value={form.days} onChange={(e) => setForm({ ...form, days: parseInt(e.target.value) || 1 })} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">Nights</label>
+              <input type="number" className="input" min={0} value={form.nights} onChange={(e) => setForm({ ...form, nights: parseInt(e.target.value) || 0 })} />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Summary</label>
+            <textarea className="input min-h-[120px]" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} required />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Hero Image URL</label>
+            <input type="text" className="input" value={form.heroImage} onChange={(e) => setForm({ ...form, heroImage: e.target.value })} />
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="published" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} className="h-4 w-4 rounded border-gray-300 text-primary-600" />
+            <label htmlFor="published" className="text-sm font-medium text-gray-700">Published</label>
+          </div>
+        </div>
+
+        {/* Route */}
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Route</h2>
+            <button type="button" onClick={() => addArrayItem("route")} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Stop</button>
+          </div>
+          {form.route.map((stop, i) => (
+            <div key={i} className="flex gap-2">
+              <span className="flex h-10 w-8 shrink-0 items-center justify-center text-xs font-medium text-gray-400">{i + 1}</span>
+              <input className="input flex-1" value={stop} onChange={(e) => updateArrayItem("route", i, e.target.value)} placeholder={`Stop ${i + 1}`} />
+              {form.route.length > 1 && <button type="button" onClick={() => removeArrayItem("route", i)} className="p-2 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
+            </div>
+          ))}
+        </div>
+
+        {/* Tags */}
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Tags</h2>
+            <button type="button" onClick={() => addArrayItem("tags")} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Tag</button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {form.tags.map((tag, i) => (
+              <div key={i} className="flex items-center gap-1">
+                <input className="input w-36" value={tag} onChange={(e) => updateArrayItem("tags", i, e.target.value)} placeholder="Tag" />
+                {form.tags.length > 1 && <button type="button" onClick={() => removeArrayItem("tags", i)} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Highlights */}
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Highlights</h2>
+            <button type="button" onClick={() => addArrayItem("highlights")} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add</button>
+          </div>
+          {form.highlights.map((h, i) => (
+            <div key={i} className="flex gap-2">
+              <input className="input flex-1" value={h} onChange={(e) => updateArrayItem("highlights", i, e.target.value)} placeholder="Highlight" />
+              {form.highlights.length > 1 && <button type="button" onClick={() => removeArrayItem("highlights", i)} className="p-2 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
+            </div>
+          ))}
+        </div>
+
+        {/* Places to Stay */}
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Places to Stay</h2>
+            <button type="button" onClick={() => setPlacesToStay([...placesToStay, { location: "", hotel: "", type: "" }])} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Place</button>
+          </div>
+          {placesToStay.map((place, i) => (
+            <div key={i} className="space-y-2 rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-500">Hotel #{i + 1}</span>
+                {placesToStay.length > 1 && <button type="button" onClick={() => setPlacesToStay(placesToStay.filter((_, idx) => idx !== i))} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Location</label>
+                  <input className="input" value={place.location} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], location: e.target.value }; setPlacesToStay(u); }} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Hotel Name</label>
+                  <input className="input" value={place.hotel} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], hotel: e.target.value }; setPlacesToStay(u); }} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Type</label>
+                  <input className="input" value={place.type} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], type: e.target.value }; setPlacesToStay(u); }} />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-500">Image URL</label>
+                <input className="input" value={place.image || ""} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], image: e.target.value }; setPlacesToStay(u); }} placeholder="https://..." />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Itinerary */}
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Itinerary ({itinerary.length} days)</h2>
+            <button type="button" onClick={() => setItinerary([...itinerary, { day: itinerary.length + 1, title: "", description: "", image: "", location: "", activities: [""] }])} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Day</button>
+          </div>
+          {itinerary.map((day, i) => (
+            <div key={i} className="space-y-3 rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-gray-300" />
+                  <h3 className="text-sm font-semibold text-primary-700">Day {day.day}</h3>
+                </div>
+                {itinerary.length > 1 && <button type="button" onClick={() => setItinerary(itinerary.filter((_, idx) => idx !== i))} className="p-1 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Title</label>
+                  <input className="input" value={day.title} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], title: e.target.value }; setItinerary(u); }} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Location</label>
+                  <input className="input" value={day.location} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], location: e.target.value }; setItinerary(u); }} />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-500">Description</label>
+                <textarea className="input min-h-[80px]" value={day.description} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], description: e.target.value }; setItinerary(u); }} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Image URL</label>
+                  <input className="input" value={day.image} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], image: e.target.value }; setItinerary(u); }} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-gray-500">Accommodation</label>
+                  <input className="input" value={day.accommodation || ""} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], accommodation: e.target.value }; setItinerary(u); }} />
+                </div>
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-xs text-gray-500">Activities</label>
+                  <button type="button" onClick={() => addItineraryActivity(i)} className="text-xs text-primary-600 hover:text-primary-700">+ Add</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(day.activities || [""]).map((act, ai) => (
+                    <div key={ai} className="flex items-center gap-1">
+                      <input className="input w-44" value={act} onChange={(e) => updateItineraryActivity(i, ai, e.target.value)} placeholder="Activity" />
+                      {(day.activities || []).length > 1 && <button type="button" onClick={() => removeItineraryActivity(i, ai)} className="p-0.5 text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button type="button" onClick={() => router.back()} className="btn-secondary">Cancel</button>
+          <button type="submit" disabled={saving} className="btn-primary">
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
