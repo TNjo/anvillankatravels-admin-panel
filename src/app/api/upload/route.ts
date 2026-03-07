@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { adminStorage } from "@/lib/firebase-admin";
 import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
-import { v4 as uuidv4 } from "crypto";
 
 export async function POST(request: NextRequest) {
   const user = await verifyAuth(request);

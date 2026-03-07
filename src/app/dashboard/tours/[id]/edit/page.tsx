@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { ArrowLeft, Plus, Trash2, Save, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import type { Tour, TourDay, PlaceToStay } from "@/types";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function EditTourPage() {
   const { getToken } = useAuth();
@@ -196,10 +197,12 @@ export default function EditTourPage() {
             <label className="mb-1.5 block text-sm font-medium text-gray-700">Summary</label>
             <textarea className="input min-h-[120px]" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} required />
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Hero Image URL</label>
-            <input type="text" className="input" value={form.heroImage} onChange={(e) => setForm({ ...form, heroImage: e.target.value })} />
-          </div>
+          <ImageUpload
+            label="Hero Image"
+            value={form.heroImage}
+            onChange={(url) => setForm({ ...form, heroImage: url })}
+            folder="tours"
+          />
           <div className="flex items-center gap-2">
             <input type="checkbox" id="published" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} className="h-4 w-4 rounded border-gray-300 text-primary-600" />
             <label htmlFor="published" className="text-sm font-medium text-gray-700">Published</label>
@@ -277,10 +280,12 @@ export default function EditTourPage() {
                   <input className="input" value={place.type} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], type: e.target.value }; setPlacesToStay(u); }} />
                 </div>
               </div>
-              <div>
-                <label className="mb-1 block text-xs text-gray-500">Image URL</label>
-                <input className="input" value={place.image || ""} onChange={(e) => { const u = [...placesToStay]; u[i] = { ...u[i], image: e.target.value }; setPlacesToStay(u); }} placeholder="https://..." />
-              </div>
+              <ImageUpload
+                label="Hotel Image"
+                value={place.image || ""}
+                onChange={(url) => { const u = [...placesToStay]; u[i] = { ...u[i], image: url }; setPlacesToStay(u); }}
+                folder="hotels"
+              />
             </div>
           ))}
         </div>
@@ -314,16 +319,16 @@ export default function EditTourPage() {
                 <label className="mb-1 block text-xs text-gray-500">Description</label>
                 <textarea className="input min-h-[80px]" value={day.description} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], description: e.target.value }; setItinerary(u); }} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs text-gray-500">Image URL</label>
-                  <input className="input" value={day.image} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], image: e.target.value }; setItinerary(u); }} />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-gray-500">Accommodation</label>
-                  <input className="input" value={day.accommodation || ""} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], accommodation: e.target.value }; setItinerary(u); }} />
-                </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-500">Accommodation</label>
+                <input className="input" value={day.accommodation || ""} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], accommodation: e.target.value }; setItinerary(u); }} />
               </div>
+              <ImageUpload
+                label="Day Image"
+                value={day.image}
+                onChange={(url) => { const u = [...itinerary]; u[i] = { ...u[i], image: url }; setItinerary(u); }}
+                folder={`tours/${tourId}`}
+              />
               <div>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="text-xs text-gray-500">Activities</label>

@@ -10,17 +10,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const publishedOnly = searchParams.get("published") === "true";
 
-    let query: FirebaseFirestore.Query = adminDb.collection(COLLECTION).orderBy("createdAt", "desc");
-
-    if (publishedOnly) {
-      query = query.where("published", "==", true);
-    }
-
-    const snapshot = await query.get();
-    const dayTours = snapshot.docs.map((doc) => ({
+    const snapshot = await adminDb.collection(COLLECTION).get();
+    let dayTours = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as DayTour[];
+
+    if (publishedOnly) {
+      dayTours = dayTours.filter((t) => t.published === true);
+    }
+
+    dayTours.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 
     return Response.json(dayTours);
   } catch (error) {

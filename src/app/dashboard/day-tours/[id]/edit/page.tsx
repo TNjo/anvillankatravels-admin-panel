@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 import type { DayTour, DayTourItineraryStep } from "@/types";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function EditDayTourPage() {
   const { getToken } = useAuth();
@@ -187,30 +188,54 @@ export default function EditDayTourPage() {
               <input type="text" className="input" value={form.tourType} onChange={(e) => setForm({ ...form, tourType: e.target.value })} />
             </div>
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Hero Image URL</label>
-            <input type="text" className="input" value={form.heroImage} onChange={(e) => setForm({ ...form, heroImage: e.target.value })} />
-          </div>
+          <ImageUpload
+            label="Hero Image"
+            value={form.heroImage}
+            onChange={(url) => setForm({ ...form, heroImage: url })}
+            folder="day-tours"
+          />
           <div className="flex items-center gap-2">
             <input type="checkbox" id="published" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} className="h-4 w-4 rounded border-gray-300 text-primary-600" />
             <label htmlFor="published" className="text-sm font-medium text-gray-700">Published</label>
           </div>
         </div>
 
-        {(["highlights", "tags", "inclusions", "exclusions", "galleryImages"] as const).map((field) => (
+        {(["highlights", "tags", "inclusions", "exclusions"] as const).map((field) => (
           <div key={field} className="card space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold capitalize">{field === "galleryImages" ? "Gallery Images" : field}</h2>
+              <h2 className="text-lg font-semibold capitalize">{field}</h2>
               <button type="button" onClick={() => addArrayItem(field)} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add</button>
             </div>
             {form[field].map((val, i) => (
               <div key={i} className="flex gap-2">
-                <input className="input flex-1" value={val} onChange={(e) => updateArrayItem(field, i, e.target.value)} placeholder={field === "galleryImages" ? "Image URL" : `${field.slice(0, -1)} ${i + 1}`} />
+                <input className="input flex-1" value={val} onChange={(e) => updateArrayItem(field, i, e.target.value)} placeholder={`${field.slice(0, -1)} ${i + 1}`} />
                 {form[field].length > 1 && <button type="button" onClick={() => removeArrayItem(field, i)} className="p-2 text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
               </div>
             ))}
           </div>
         ))}
+
+        {/* Gallery Images with upload */}
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Gallery Images</h2>
+            <button type="button" onClick={() => addArrayItem("galleryImages")} className="btn-secondary text-xs"><Plus className="mr-1 h-3 w-3" /> Add Image</button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {form.galleryImages.map((val, i) => (
+              <div key={i} className="relative">
+                <ImageUpload
+                  value={val}
+                  onChange={(url) => updateArrayItem("galleryImages", i, url)}
+                  folder="day-tours/gallery"
+                />
+                {form.galleryImages.length > 1 && (
+                  <button type="button" onClick={() => removeArrayItem("galleryImages", i)} className="absolute -right-2 -top-2 z-10 rounded-full bg-red-500 p-1 text-white shadow hover:bg-red-600"><Trash2 className="h-3 w-3" /></button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="card space-y-4">
           <div className="flex items-center justify-between">

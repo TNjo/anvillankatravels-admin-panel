@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Tour, TourDay, PlaceToStay } from "@/types";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function NewTourPage() {
   const { getToken } = useAuth();
@@ -149,16 +150,12 @@ export default function NewTourPage() {
             />
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Hero Image URL</label>
-            <input
-              type="url"
-              className="input"
-              value={form.heroImage}
-              onChange={(e) => setForm({ ...form, heroImage: e.target.value })}
-              placeholder="https://..."
-            />
-          </div>
+          <ImageUpload
+            label="Hero Image"
+            value={form.heroImage}
+            onChange={(url) => setForm({ ...form, heroImage: url })}
+            folder="tours"
+          />
 
           <div className="flex items-center gap-2">
             <input

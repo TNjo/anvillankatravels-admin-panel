@@ -13,17 +13,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
 
-    let query: FirebaseFirestore.Query = adminDb.collection(COLLECTION).orderBy("createdAt", "desc");
-
-    if (status) {
-      query = query.where("status", "==", status);
-    }
-
-    const snapshot = await query.get();
-    const contacts = snapshot.docs.map((doc) => ({
+    const snapshot = await adminDb.collection(COLLECTION).get();
+    let contacts = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as Contact[];
+
+    if (status) {
+      contacts = contacts.filter((c) => c.status === status);
+    }
+
+    contacts.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 
     return Response.json(contacts);
   } catch (error) {
