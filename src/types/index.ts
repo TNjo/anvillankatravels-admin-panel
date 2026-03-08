@@ -45,6 +45,11 @@ export interface PlaceToStay {
   image?: string;
 }
 
+export interface TourFAQ {
+  question: string;
+  answer: string;
+}
+
 export interface Tour {
   id: string;
   name: string;
@@ -56,6 +61,7 @@ export interface Tour {
   highlights: string[];
   placesToStay: PlaceToStay[];
   itinerary: TourDay[];
+  faqs?: TourFAQ[];
   parentTourName?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -103,6 +109,23 @@ export interface Booking {
   updatedAt: string;
 }
 
+export interface TailorMadeData {
+  title?: string;
+  arrivalDate?: string;
+  departureDate?: string;
+  pickupPlace?: string;
+  groupSize?: string;
+  numAdults?: string;
+  ageGroupAdults?: string[];
+  numChildren?: string;
+  ageGroupChildren?: string[];
+  tourDuration?: string;
+  accommodation?: string;
+  budgetRange?: string;
+  interests?: string[];
+  specialRequirements?: string;
+}
+
 export interface Contact {
   id: string;
   name: string;
@@ -111,6 +134,13 @@ export interface Contact {
   subject: string;
   message: string;
   status: "unread" | "read" | "replied";
+  type?: "inquiry" | "tailor-made" | "contact";
+  country?: string;
+  countryOther?: string;
+  whatsapp?: string;
+  dates?: string;
+  selectedPackage?: string;
+  tailorMade?: TailorMadeData;
   createdAt: string;
 }
 

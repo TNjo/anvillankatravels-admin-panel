@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import type { Tour, TourDay, PlaceToStay } from "@/types";
+import type { Tour, TourDay, PlaceToStay, TourFAQ } from "@/types";
 import ImageUpload from "@/components/ImageUpload";
 
 export default function NewTourPage() {
@@ -32,6 +32,8 @@ export default function NewTourPage() {
   const [itinerary, setItinerary] = useState<TourDay[]>([
     { day: 1, title: "", description: "", image: "", location: "", activities: [""], accommodation: "" },
   ]);
+
+  const [faqs, setFaqs] = useState<TourFAQ[]>([]);
 
   const addArrayItem = (field: "route" | "tags" | "highlights") => {
     setForm({ ...form, [field]: [...form[field], ""] });
@@ -64,6 +66,7 @@ export default function NewTourPage() {
         published: form.published,
         placesToStay: placesToStay.filter((p) => p.location && p.hotel),
         itinerary: itinerary.filter((i) => i.title),
+        faqs: faqs.filter((f) => f.question && f.answer),
       };
 
       const res = await fetch("/api/tours", {
@@ -371,6 +374,62 @@ export default function NewTourPage() {
                 }}
                 placeholder="Accommodation"
               />
+            </div>
+          ))}
+        </div>
+
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">FAQs</h2>
+            <button
+              type="button"
+              onClick={() => setFaqs([...faqs, { question: "", answer: "" }])}
+              className="btn-secondary text-xs"
+            >
+              <Plus className="mr-1 h-3 w-3" /> Add FAQ
+            </button>
+          </div>
+          {faqs.length === 0 && (
+            <p className="text-sm text-gray-400">No FAQs added yet. Click &quot;Add FAQ&quot; to get started.</p>
+          )}
+          {faqs.map((faq, i) => (
+            <div key={i} className="space-y-2 rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-500">FAQ #{i + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => setFaqs(faqs.filter((_, idx) => idx !== i))}
+                  className="p-1 text-red-400 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-500">Question</label>
+                <input
+                  className="input"
+                  value={faq.question}
+                  onChange={(e) => {
+                    const updated = [...faqs];
+                    updated[i] = { ...updated[i], question: e.target.value };
+                    setFaqs(updated);
+                  }}
+                  placeholder="e.g., What is included in this tour?"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-500">Answer</label>
+                <textarea
+                  className="input min-h-[80px]"
+                  value={faq.answer}
+                  onChange={(e) => {
+                    const updated = [...faqs];
+                    updated[i] = { ...updated[i], answer: e.target.value };
+                    setFaqs(updated);
+                  }}
+                  placeholder="Provide a detailed answer..."
+                />
+              </div>
             </div>
           ))}
         </div>

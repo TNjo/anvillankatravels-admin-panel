@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
+    const type = searchParams.get("type");
 
     let query: FirebaseFirestore.Query = adminDb
       .collection(COLLECTION)
@@ -19,6 +20,10 @@ export async function GET(request: NextRequest) {
 
     if (status) {
       query = query.where("status", "==", status);
+    }
+
+    if (type) {
+      query = query.where("type", "==", type);
     }
 
     const snapshot = await query.get();
