@@ -14,6 +14,7 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
@@ -21,6 +22,7 @@ import { useAuth } from "./AuthProvider";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/tours", label: "Tour Packages", icon: Map },
+  { href: "/dashboard/hotels", label: "Hotels", icon: Building2 },
   { href: "/dashboard/day-tours", label: "Day Tours", icon: Sun },
   { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck },
   { href: "/dashboard/contacts", label: "Messages", icon: MessageSquare },

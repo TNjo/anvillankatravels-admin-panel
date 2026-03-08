@@ -22,19 +22,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    let query: FirebaseFirestore.Query = adminDb
-      .collection(COLLECTION)
-      .orderBy("createdAt", "desc");
-
-    if (publishedOnly) {
-      query = query.where("published", "==", true);
-    }
-
-    const snapshot = await query.get();
+    const snapshot = await adminDb.collection(COLLECTION).get();
     let dayTours = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as DayTour[];
+
+    // Sort by createdAt descending
+    dayTours.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+    if (publishedOnly) {
+      dayTours = dayTours.filter((t) => t.published === true);
+    }
 
     const search = searchParams.get("search")?.toLowerCase();
     if (search) {

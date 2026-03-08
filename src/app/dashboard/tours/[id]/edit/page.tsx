@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
-import { ArrowLeft, Plus, Trash2, Save, GripVertical, Package, Pencil } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, GripVertical, Package, Pencil, Building2 } from "lucide-react";
 import { toast } from "sonner";
-import type { Tour, TourDay, PlaceToStay } from "@/types";
+import type { Tour, TourDay, PlaceToStay, Hotel } from "@/types";
 import ImageUpload from "@/components/ImageUpload";
 
 export default function EditTourPage() {
@@ -33,6 +33,7 @@ export default function EditTourPage() {
   const [placesToStay, setPlacesToStay] = useState<PlaceToStay[]>([]);
   const [itinerary, setItinerary] = useState<TourDay[]>([]);
   const [subPackages, setSubPackages] = useState<Tour[]>([]);
+  const [allHotels, setAllHotels] = useState<Hotel[]>([]);
 
   useEffect(() => {
     async function fetchTour() {
@@ -73,6 +74,14 @@ export default function EditTourPage() {
           if (subRes.ok) {
             setSubPackages(await subRes.json());
           }
+        }
+
+        // Fetch all hotels for the hotel selector
+        const hotelsRes = await fetch("/api/hotels", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (hotelsRes.ok) {
+          setAllHotels(await hotelsRes.json());
         }
       } catch {
         toast.error("Failed to load tour");
@@ -380,8 +389,43 @@ export default function EditTourPage() {
                   <textarea className="input min-h-[80px]" value={day.description} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], description: e.target.value }; setItinerary(u); }} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-gray-500">Accommodation</label>
-                  <input className="input" value={day.accommodation || ""} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], accommodation: e.target.value }; setItinerary(u); }} />
+                  <label className="mb-1 block text-xs text-gray-500">Hotel</label>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <select
+                      className="input flex-1"
+                      value={day.hotelId || ""}
+                      onChange={(e) => {
+                        const u = [...itinerary];
+                        const selectedHotel = allHotels.find((h) => h.id === e.target.value);
+                        u[i] = {
+                          ...u[i],
+                          hotelId: e.target.value || undefined,
+                          accommodation: selectedHotel?.name || "",
+                        };
+                        setItinerary(u);
+                      }}
+                    >
+                      <option value="">No hotel assigned</option>
+                      {allHotels.map((h) => (
+                        <option key={h.id} value={h.id}>
+                          {h.name} — {h.location}
+                        </option>
+                      ))}
+                    </select>
+                    {day.hotelId && (
+                      <Link
+                        href={`/dashboard/hotels/${day.hotelId}/edit`}
+                        className="rounded-lg p-1.5 text-blue-500 hover:bg-blue-50"
+                        title="Edit hotel"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Link>
+                    )}
+                  </div>
+                  {!day.hotelId && (
+                    <input className="input mt-2" value={day.accommodation || ""} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], accommodation: e.target.value }; setItinerary(u); }} placeholder="Or type accommodation name manually" />
+                  )}
                 </div>
                 <ImageUpload
                   label="Day Image"

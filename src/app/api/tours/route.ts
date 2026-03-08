@@ -24,28 +24,25 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    let query: FirebaseFirestore.Query = adminDb
-      .collection(COLLECTION)
-      .orderBy("createdAt", "desc");
-
-    if (publishedOnly) {
-      query = query.where("published", "==", true);
-    }
-
-    if (!includeAll) {
-      if (parentTourName) {
-        query = query.where("parentTourName", "==", parentTourName);
-      }
-    }
-
-    const snapshot = await query.get();
+    const snapshot = await adminDb.collection(COLLECTION).get();
     let tours = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as Tour[];
 
-    if (!includeAll && !parentTourName) {
-      tours = tours.filter((t) => !t.parentTourName);
+    // Sort by createdAt descending
+    tours.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+    if (publishedOnly) {
+      tours = tours.filter((t) => t.published === true);
+    }
+
+    if (!includeAll) {
+      if (parentTourName) {
+        tours = tours.filter((t) => t.parentTourName === parentTourName);
+      } else {
+        tours = tours.filter((t) => !t.parentTourName);
+      }
     }
 
     const search = searchParams.get("search")?.toLowerCase();
