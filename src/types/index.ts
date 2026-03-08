@@ -1,3 +1,32 @@
+export interface HotelRoomType {
+  name: string;
+  description: string;
+  image?: string;
+}
+
+export interface HotelDistance {
+  place: string;
+  distance: string;
+  duration: string;
+}
+
+export interface Hotel {
+  id: string;
+  name: string;
+  location: string;
+  description: string;
+  heroImage: string;
+  galleryImages: string[];
+  features: string[];
+  roomTypes: HotelRoomType[];
+  distances: HotelDistance[];
+  mapCoordinates?: { lat: number; lng: number };
+  starRating?: number;
+  category?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface TourDay {
   day: number;
   title: string;
@@ -6,6 +35,7 @@ export interface TourDay {
   location: string;
   activities: string[];
   accommodation?: string;
+  hotelId?: string;
 }
 
 export interface PlaceToStay {
