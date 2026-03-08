@@ -2,22 +2,43 @@ import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
 import { invalidateCache } from "@/lib/cache";
+import { applyTranslations } from "@/lib/translate";
 
 const COLLECTION = "dayTours";
+const TRANSLATIONS_COLLECTION = "translations";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const lang = searchParams.get("lang");
+
     const doc = await adminDb.collection(COLLECTION).doc(id).get();
 
     if (!doc.exists) {
       return Response.json({ error: "Day tour not found" }, { status: 404 });
     }
 
-    return Response.json({ id: doc.id, ...doc.data() }, {
+    let tourData: Record<string, unknown> = { id: doc.id, ...doc.data() };
+
+    if (lang && lang !== "en") {
+      const transDoc = await adminDb
+        .collection(TRANSLATIONS_COLLECTION)
+        .doc(`${COLLECTION}_${id}_${lang}`)
+        .get();
+
+      if (transDoc.exists) {
+        const transData = transDoc.data();
+        if (transData?.fields) {
+          tourData = applyTranslations(tourData, transData.fields);
+        }
+      }
+    }
+
+    return Response.json(tourData, {
       headers: {
         "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
       },

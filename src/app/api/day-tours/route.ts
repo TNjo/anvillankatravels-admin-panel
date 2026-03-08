@@ -2,17 +2,20 @@ import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
 import { getCached, setCache, invalidateCache } from "@/lib/cache";
+import { applyTranslations } from "@/lib/translate";
 import type { DayTour } from "@/types";
 
 const COLLECTION = "dayTours";
+const TRANSLATIONS_COLLECTION = "translations";
 const CACHE_TTL = 120;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const publishedOnly = searchParams.get("published") === "true";
+    const lang = searchParams.get("lang");
 
-    const cacheKey = `dayTours:${publishedOnly}`;
+    const cacheKey = `dayTours:${publishedOnly}:${lang || ""}`;
     const cached = getCached<DayTour[]>(cacheKey);
     if (cached) {
       return Response.json(cached, {
@@ -28,7 +31,6 @@ export async function GET(request: NextRequest) {
       ...doc.data(),
     })) as DayTour[];
 
-    // Sort by createdAt descending
     dayTours.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 
     if (publishedOnly) {
@@ -40,6 +42,32 @@ export async function GET(request: NextRequest) {
       dayTours = dayTours.filter((t) =>
         t.name?.toLowerCase().includes(search)
       );
+    }
+
+    if (lang && lang !== "en") {
+      const tourIds = dayTours.map((t) => t.id);
+      const translationDocs = await Promise.all(
+        tourIds.map((id) =>
+          adminDb
+            .collection(TRANSLATIONS_COLLECTION)
+            .doc(`${COLLECTION}_${id}_${lang}`)
+            .get()
+        )
+      );
+
+      dayTours = dayTours.map((tour, idx) => {
+        const transDoc = translationDocs[idx];
+        if (transDoc.exists) {
+          const transData = transDoc.data();
+          if (transData?.fields) {
+            return applyTranslations(
+              tour as unknown as Record<string, unknown>,
+              transData.fields
+            ) as unknown as DayTour;
+          }
+        }
+        return tour;
+      });
     }
 
     setCache(cacheKey, dayTours, CACHE_TTL);

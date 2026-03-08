@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
+  Languages,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/dashboard/day-tours", label: "Day Tours", icon: Sun },
   { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck },
   { href: "/dashboard/contacts", label: "Messages", icon: MessageSquare },
+  { href: "/dashboard/translations", label: "Translations", icon: Languages },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 

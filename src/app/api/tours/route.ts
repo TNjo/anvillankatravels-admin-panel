@@ -2,10 +2,12 @@ import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
 import { getCached, setCache, invalidateCache } from "@/lib/cache";
+import { applyTranslations } from "@/lib/translate";
 import type { Tour } from "@/types";
 
 const COLLECTION = "tours";
-const CACHE_TTL = 120; // 2 minutes
+const TRANSLATIONS_COLLECTION = "translations";
+const CACHE_TTL = 120;
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,8 +15,9 @@ export async function GET(request: NextRequest) {
     const publishedOnly = searchParams.get("published") === "true";
     const parentTourName = searchParams.get("parentTourName");
     const includeAll = searchParams.get("all") === "true";
+    const lang = searchParams.get("lang");
 
-    const cacheKey = `tours:${publishedOnly}:${parentTourName || ""}:${includeAll}`;
+    const cacheKey = `tours:${publishedOnly}:${parentTourName || ""}:${includeAll}:${lang || ""}`;
     const cached = getCached<Tour[]>(cacheKey);
     if (cached) {
       return Response.json(cached, {
@@ -30,7 +33,6 @@ export async function GET(request: NextRequest) {
       ...doc.data(),
     })) as Tour[];
 
-    // Sort by createdAt descending
     tours.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 
     if (publishedOnly) {
@@ -50,6 +52,32 @@ export async function GET(request: NextRequest) {
       tours = tours.filter((t) =>
         t.name?.toLowerCase().includes(search)
       );
+    }
+
+    if (lang && lang !== "en") {
+      const tourIds = tours.map((t) => t.id);
+      const translationDocs = await Promise.all(
+        tourIds.map((id) =>
+          adminDb
+            .collection(TRANSLATIONS_COLLECTION)
+            .doc(`${COLLECTION}_${id}_${lang}`)
+            .get()
+        )
+      );
+
+      tours = tours.map((tour, idx) => {
+        const transDoc = translationDocs[idx];
+        if (transDoc.exists) {
+          const transData = transDoc.data();
+          if (transData?.fields) {
+            return applyTranslations(
+              tour as unknown as Record<string, unknown>,
+              transData.fields
+            ) as unknown as Tour;
+          }
+        }
+        return tour;
+      });
     }
 
     setCache(cacheKey, tours, CACHE_TTL);
