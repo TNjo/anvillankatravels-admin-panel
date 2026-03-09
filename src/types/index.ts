@@ -36,6 +36,7 @@ export interface TourDay {
   activities: string[];
   accommodation?: string;
   hotelId?: string;
+  hotelIds?: string[];
 }
 
 export interface PlaceToStay {
