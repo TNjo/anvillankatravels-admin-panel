@@ -392,41 +392,62 @@ export default function EditTourPage() {
                   <textarea className="input min-h-[80px]" value={day.description} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], description: e.target.value }; setItinerary(u); }} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs text-gray-500">Hotel</label>
+                  <label className="mb-1 block text-xs text-gray-500">Hotels</label>
+                  {/* List assigned hotels */}
+                  {(day.hotelIds || (day.hotelId ? [day.hotelId] : [])).map((hId, hIdx) => {
+                    const h = allHotels.find((x) => x.id === hId);
+                    return (
+                      <div key={hId} className="mb-2 flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <Building2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        <span className="flex-1 text-sm font-medium">{h ? `${h.name} — ${h.location}` : hId}</span>
+                        <Link href={`/dashboard/hotels/${hId}/edit`} className="rounded p-1 text-blue-500 hover:bg-blue-100" title="Edit hotel">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Link>
+                        <button
+                          type="button"
+                          className="rounded p-1 text-red-400 hover:bg-red-50 hover:text-red-600"
+                          title="Remove hotel"
+                          onClick={() => {
+                            const u = [...itinerary];
+                            const currentIds = u[i].hotelIds || (u[i].hotelId ? [u[i].hotelId] : []);
+                            const newIds = currentIds.filter((id) => id !== hId);
+                            u[i] = { ...u[i], hotelIds: newIds.length > 0 ? newIds : undefined, hotelId: newIds[0] || undefined, accommodation: newIds.length > 0 ? allHotels.find((x) => x.id === newIds[0])?.name || "" : "" };
+                            setItinerary(u);
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {/* Add hotel dropdown */}
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <select
                       className="input flex-1"
-                      value={day.hotelId || ""}
+                      value=""
                       onChange={(e) => {
+                        if (!e.target.value) return;
                         const u = [...itinerary];
-                        const selectedHotel = allHotels.find((h) => h.id === e.target.value);
-                        u[i] = {
-                          ...u[i],
-                          hotelId: e.target.value || undefined,
-                          accommodation: selectedHotel?.name || "",
-                        };
+                        const currentIds = u[i].hotelIds || (u[i].hotelId ? [u[i].hotelId] : []);
+                        if (currentIds.includes(e.target.value)) return;
+                        const newIds = [...currentIds, e.target.value];
+                        const firstName = allHotels.find((x) => x.id === newIds[0])?.name || "";
+                        u[i] = { ...u[i], hotelIds: newIds, hotelId: newIds[0], accommodation: firstName };
                         setItinerary(u);
                       }}
                     >
-                      <option value="">No hotel assigned</option>
-                      {allHotels.map((h) => (
-                        <option key={h.id} value={h.id}>
-                          {h.name} — {h.location}
-                        </option>
-                      ))}
+                      <option value="">+ Add a hotel...</option>
+                      {allHotels
+                        .filter((h) => !(day.hotelIds || (day.hotelId ? [day.hotelId] : [])).includes(h.id))
+                        .map((h) => (
+                          <option key={h.id} value={h.id}>
+                            {h.name} — {h.location}
+                          </option>
+                        ))}
                     </select>
-                    {day.hotelId && (
-                      <Link
-                        href={`/dashboard/hotels/${day.hotelId}/edit`}
-                        className="rounded-lg p-1.5 text-blue-500 hover:bg-blue-50"
-                        title="Edit hotel"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Link>
-                    )}
                   </div>
-                  {!day.hotelId && (
+                  {!(day.hotelIds?.length || day.hotelId) && (
                     <input className="input mt-2" value={day.accommodation || ""} onChange={(e) => { const u = [...itinerary]; u[i] = { ...u[i], accommodation: e.target.value }; setItinerary(u); }} placeholder="Or type accommodation name manually" />
                   )}
                 </div>
