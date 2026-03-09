@@ -12,7 +12,7 @@ export default function DayToursPage() {
   const [tours, setTours] = useState<DayTour[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
   const fetchDayTours = useCallback(async (searchQuery?: string) => {
     try {

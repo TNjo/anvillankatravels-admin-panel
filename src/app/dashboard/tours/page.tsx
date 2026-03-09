@@ -13,7 +13,7 @@ export default function ToursPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
   const fetchTours = useCallback(async (searchQuery?: string) => {
     try {
