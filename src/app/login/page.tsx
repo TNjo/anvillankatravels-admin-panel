@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase-client";
-import { MapPin, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -49,15 +50,26 @@ export default function LoginPage() {
       <div className="hidden w-1/2 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 lg:flex lg:flex-col lg:items-center lg:justify-center">
         <div className="max-w-md space-y-6 px-8 text-center text-white">
           <div className="flex justify-center">
-            <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-              <MapPin className="h-12 w-12" />
+            <div className="rounded-full bg-white p-2 shadow-xl">
+              <Image
+                src="/logo.png"
+                alt="Anvil Lanka Travels"
+                width={80}
+                height={80}
+                className="rounded-full"
+              />
             </div>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">
-            Anvil Lanka Travels
-          </h1>
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">
+              Anvil Lanka Travels
+            </h1>
+            <p className="text-sm font-medium uppercase tracking-widest text-primary-200 mt-1">
+              Admin Panel
+            </p>
+          </div>
           <p className="text-lg text-primary-100">
-            Admin panel for managing tours, bookings, and customer inquiries
+            Manage tours, bookings, and customer inquiries
             across your travel platform.
           </p>
         </div>
@@ -66,11 +78,22 @@ export default function LoginPage() {
       <div className="flex w-full items-center justify-center px-4 lg:w-1/2">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:text-left">
-            <div className="mb-4 flex items-center justify-center gap-2 lg:justify-start">
-              <MapPin className="h-8 w-8 text-primary-600" />
-              <span className="text-xl font-bold text-gray-900 lg:hidden">
-                Anvil Lanka Travels
-              </span>
+            <div className="mb-4 flex items-center justify-center gap-3 lg:justify-start">
+              <Image
+                src="/logo.png"
+                alt="Anvil Lanka Travels"
+                width={48}
+                height={48}
+                className="rounded-full"
+              />
+              <div className="lg:hidden">
+                <span className="text-xl font-bold text-gray-900 block leading-tight">
+                  Anvil Lanka Travels
+                </span>
+                <span className="text-xs font-medium uppercase tracking-wider text-primary-600">
+                  Admin Panel
+                </span>
+              </div>
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
             <p className="mt-1 text-sm text-gray-500">

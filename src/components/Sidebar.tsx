@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Map,
@@ -11,7 +12,6 @@ import {
   MessageSquare,
   Settings,
   LogOut,
-  MapPin,
   ChevronLeft,
   ChevronRight,
   Building2,
@@ -45,22 +45,43 @@ export function Sidebar() {
         collapsed ? "w-[72px]" : "w-64"
       )}
     >
-      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
+      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-3">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            alt="Anvil Lanka Travels"
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+          {!collapsed && (
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-gray-900 leading-tight">
+                Anvil Lanka
+              </span>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-primary-600">
+                Travels
+              </span>
+            </div>
+          )}
+        </div>
         {!collapsed && (
-          <div className="flex items-center gap-2">
-            <MapPin className="h-7 w-7 text-primary-600" />
-            <span className="text-sm font-bold text-gray-900">
-              Anvil Lanka
-            </span>
-          </div>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
         )}
+      </div>
+      {collapsed && (
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          className="mx-auto mt-2 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
         >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          <ChevronRight className="h-4 w-4" />
         </button>
-      </div>
+      )}
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => {
