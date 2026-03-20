@@ -205,8 +205,8 @@ export default function TravelMemoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Travel Memories</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Travel Memories</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Manage your gallery of travel photos ({publishedCount} published, {memories.length - publishedCount} hidden)
           </p>
         </div>
@@ -222,14 +222,14 @@ export default function TravelMemoriesPage() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="aspect-square animate-pulse rounded-lg bg-gray-200" />
+            <div key={i} className="aspect-square animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
           ))}
         </div>
       ) : memories.length === 0 ? (
         <div className="card flex flex-col items-center justify-center py-16 text-center">
-          <Camera className="mb-4 h-16 w-16 text-gray-300" />
-          <h3 className="text-lg font-medium text-gray-900">No travel memories yet</h3>
-          <p className="mt-1 max-w-sm text-sm text-gray-500">
+          <Camera className="mb-4 h-16 w-16 text-gray-300 dark:text-gray-600" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">No travel memories yet</h3>
+          <p className="mt-1 max-w-sm text-sm text-gray-500 dark:text-gray-400">
             Start building your gallery by adding photos from your tours and travels.
           </p>
           <button
@@ -249,10 +249,10 @@ export default function TravelMemoriesPage() {
               onDragStart={() => handleDragStart(memory.id)}
               onDragOver={(e) => handleDragOver(e, memory.id)}
               onDragEnd={handleDragEnd}
-              className={`group relative aspect-square overflow-hidden rounded-lg border-2 bg-gray-100 transition-all ${
+              className={`group relative aspect-square overflow-hidden rounded-lg border-2 bg-gray-100 dark:bg-gray-800 transition-all ${
                 draggedItem === memory.id
                   ? "border-primary-500 opacity-50"
-                  : "border-transparent hover:border-gray-300"
+                  : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
               } ${!memory.published ? "opacity-60" : ""}`}
             >
               {memory.imageUrl ? (
@@ -331,15 +331,15 @@ export default function TravelMemoriesPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">Delete Memory</h3>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Delete Memory</h3>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
               Are you sure you want to delete this travel memory? This action cannot be undone.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Cancel
               </button>
@@ -471,14 +471,14 @@ function MemoryModal({ isOpen, onClose, onSave, memory }: MemoryModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
-      <div className="relative w-full max-w-lg rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="relative w-full max-w-lg rounded-lg bg-white dark:bg-gray-800 shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {memory ? "Edit Memory" : "Add New Memory"}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
           >
             <X className="h-5 w-5" />
           </button>
@@ -488,11 +488,11 @@ function MemoryModal({ isOpen, onClose, onSave, memory }: MemoryModalProps) {
           <div className="space-y-4">
             {/* Image Upload */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Image *
               </label>
               {formData.imageUrl ? (
-                <div className="group relative overflow-hidden rounded-lg border border-gray-200">
+                <div className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
                   <img
                     src={formData.imageUrl}
                     alt="Preview"
@@ -526,22 +526,22 @@ function MemoryModal({ isOpen, onClose, onSave, memory }: MemoryModalProps) {
                   onClick={() => !uploading && fileInputRef.current?.click()}
                   className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
                     dragOver
-                      ? "border-primary-400 bg-primary-50"
-                      : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                      ? "border-primary-400 bg-primary-50 dark:bg-primary-900/20"
+                      : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   }`}
                 >
                   {uploading ? (
                     <>
-                      <Loader2 className="mb-2 h-8 w-8 animate-spin text-primary-600" />
-                      <span className="text-sm text-gray-500">Uploading...</span>
+                      <Loader2 className="mb-2 h-8 w-8 animate-spin text-primary-600 dark:text-primary-400" />
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Uploading...</span>
                     </>
                   ) : (
                     <>
-                      <Camera className="mb-2 h-10 w-10 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-600">
+                      <Camera className="mb-2 h-10 w-10 text-gray-400 dark:text-gray-500" />
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                         Click or drag image to upload
                       </span>
-                      <span className="text-xs text-gray-400">JPG, PNG, WebP</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">JPG, PNG, WebP</span>
                     </>
                   )}
                 </div>
@@ -566,7 +566,7 @@ function MemoryModal({ isOpen, onClose, onSave, memory }: MemoryModalProps) {
 
             {/* Title */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Title (optional)
               </label>
               <input
@@ -582,7 +582,7 @@ function MemoryModal({ isOpen, onClose, onSave, memory }: MemoryModalProps) {
 
             {/* Location */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Location (optional)
               </label>
               <input
@@ -598,7 +598,7 @@ function MemoryModal({ isOpen, onClose, onSave, memory }: MemoryModalProps) {
 
             {/* Caption */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Caption (optional)
               </label>
               <textarea
@@ -619,7 +619,7 @@ function MemoryModal({ isOpen, onClose, onSave, memory }: MemoryModalProps) {
                   setFormData({ ...formData, published: !formData.published })
                 }
                 className={`relative h-6 w-11 rounded-full transition-colors ${
-                  formData.published ? "bg-primary-600" : "bg-gray-300"
+                  formData.published ? "bg-primary-600" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
                 <span
@@ -628,18 +628,18 @@ function MemoryModal({ isOpen, onClose, onSave, memory }: MemoryModalProps) {
                   }`}
                 />
               </button>
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-gray-700 dark:text-gray-300">
                 {formData.published ? "Visible in gallery" : "Hidden from gallery"}
               </span>
             </div>
           </div>
 
           {/* Form Actions */}
-          <div className="mt-6 flex justify-end gap-3 border-t pt-6">
+          <div className="mt-6 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 pt-6">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               disabled={loading}
             >
               Cancel

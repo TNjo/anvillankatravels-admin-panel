@@ -102,8 +102,8 @@ export default function DayToursPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Day Tours</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage single-day tour experiences</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Day Tours</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage single-day tour experiences</p>
         </div>
         <Link href="/dashboard/day-tours/new" className="btn-primary">
           <Plus className="mr-2 h-4 w-4" />
@@ -126,16 +126,16 @@ export default function DayToursPage() {
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="card animate-pulse">
-              <div className="h-6 w-1/3 rounded bg-gray-200" />
-              <div className="mt-2 h-4 w-2/3 rounded bg-gray-200" />
+              <div className="h-6 w-1/3 rounded bg-gray-200 dark:bg-gray-700" />
+              <div className="mt-2 h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700" />
             </div>
           ))}
         </div>
       ) : filteredTours.length === 0 ? (
         <div className="card flex flex-col items-center justify-center py-12 text-center">
-          <Sun className="mb-4 h-12 w-12 text-gray-300" />
-          <h3 className="text-lg font-medium text-gray-900">No day tours found</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <Sun className="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">No day tours found</h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {search ? "Try a different search term" : "Add your first day tour"}
           </p>
         </div>
@@ -146,17 +146,17 @@ export default function DayToursPage() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">{tour.name}</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{tour.name}</h3>
                     {tour.published ? (
                       <span className="badge-success">Live</span>
                     ) : (
                       <span className="badge-neutral">Draft</span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {tour.location} &middot; {tour.duration} &middot; {tour.tourType}
                   </p>
-                  <p className="mt-2 line-clamp-2 text-sm text-gray-600">{tour.summary}</p>
+                  <p className="mt-2 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{tour.summary}</p>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {tour.tags?.map((tag) => (
                       <span key={tag} className="badge-info">{tag}</span>
@@ -164,23 +164,23 @@ export default function DayToursPage() {
                   </div>
                 </div>
               </div>
-              <div className="mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+              <div className="mt-4 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-gray-700 pt-3">
                 <button
                   onClick={() => togglePublish(tour)}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                   title={tour.published ? "Unpublish" : "Publish"}
                 >
                   {tour.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
                 <Link
                   href={`/dashboard/day-tours/${tour.id}/edit`}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-700 dark:hover:text-blue-400"
                 >
                   <Pencil className="h-4 w-4" />
                 </Link>
                 <button
                   onClick={() => handleDelete(tour.id)}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600"
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-700 dark:hover:text-red-400"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

@@ -145,14 +145,14 @@ export default function BookingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
-      <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+      <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white dark:bg-gray-800 shadow-xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {booking ? "Edit Booking" : "Add New Booking"}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
           >
             <X className="h-5 w-5" />
           </button>
@@ -162,13 +162,13 @@ export default function BookingModal({
           <div className="grid gap-6 md:grid-cols-2">
             {/* Tour Information Section */}
             <div className="col-span-2">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Tour Information
               </h3>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Tour Type *
               </label>
               <select
@@ -197,7 +197,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Select Tour {formData.tourType !== "custom" && "*"}
               </label>
               {formData.tourType === "custom" ? (
@@ -229,7 +229,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Start Date *
               </label>
               <input
@@ -244,7 +244,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 End Date
               </label>
               <input
@@ -259,13 +259,13 @@ export default function BookingModal({
 
             {/* Customer Information Section */}
             <div className="col-span-2 mt-4">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Customer Information
               </h3>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Customer Name *
               </label>
               <input
@@ -281,7 +281,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Email *
               </label>
               <input
@@ -297,7 +297,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Phone *
               </label>
               <input
@@ -313,7 +313,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Country
               </label>
               <input
@@ -329,13 +329,13 @@ export default function BookingModal({
 
             {/* Guest Information Section */}
             <div className="col-span-2 mt-4">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Guest Details
               </h3>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Number of Adults *
               </label>
               <input
@@ -354,7 +354,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Number of Children
               </label>
               <input
@@ -373,7 +373,7 @@ export default function BookingModal({
 
             {(formData.numberOfChildren ?? 0) > 0 && (
               <div className="col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Children Ages
                 </label>
                 <input
@@ -390,13 +390,13 @@ export default function BookingModal({
 
             {/* Travel Details Section */}
             <div className="col-span-2 mt-4">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Travel Details
               </h3>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Pickup Location
               </label>
               <input
@@ -411,7 +411,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Drop-off Location
               </label>
               <input
@@ -426,7 +426,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Accommodation Type
               </label>
               <select
@@ -451,7 +451,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Status *
               </label>
               <select
@@ -478,13 +478,13 @@ export default function BookingModal({
 
             {/* Payment Section */}
             <div className="col-span-2 mt-4">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Payment Information
               </h3>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Total Price
               </label>
               <div className="flex gap-2">
@@ -518,7 +518,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Deposit Paid
               </label>
               <input
@@ -538,7 +538,7 @@ export default function BookingModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Payment Status
               </label>
               <select
@@ -564,13 +564,13 @@ export default function BookingModal({
 
             {/* Notes Section */}
             <div className="col-span-2 mt-4">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Additional Information
               </h3>
             </div>
 
             <div className="col-span-2">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Special Requests (Customer)
               </label>
               <textarea
@@ -584,7 +584,7 @@ export default function BookingModal({
             </div>
 
             <div className="col-span-2">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Internal Notes (Admin Only)
               </label>
               <textarea
@@ -599,11 +599,11 @@ export default function BookingModal({
           </div>
 
           {/* Form Actions */}
-          <div className="mt-8 flex justify-end gap-3 border-t pt-6">
+          <div className="mt-8 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 pt-6">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               disabled={loading}
             >
               Cancel

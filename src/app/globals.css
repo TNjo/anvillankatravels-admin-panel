@@ -11,6 +11,15 @@
   html.dark body {
     @apply bg-gray-900 text-gray-100;
   }
+
+  /* Dark mode text colors */
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    @apply text-white;
+  }
+
+  .dark p {
+    @apply text-gray-300;
+  }
 }
 
 @layer components {
@@ -66,5 +75,27 @@
   .badge-neutral {
     @apply badge bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-500/10;
     @apply dark:bg-gray-700 dark:text-gray-300 dark:ring-gray-500/30;
+  }
+
+  /* Table dark mode */
+  .dark table thead tr {
+    @apply bg-gray-800/50 border-gray-700;
+  }
+
+  .dark table th {
+    @apply text-gray-400;
+  }
+
+  .dark table tbody tr {
+    @apply border-gray-700 hover:bg-gray-700/50;
+  }
+
+  .dark table td {
+    @apply text-gray-300;
+  }
+
+  /* Modal dark mode */
+  .dark .modal-content {
+    @apply bg-gray-800 border-gray-700;
   }
 }

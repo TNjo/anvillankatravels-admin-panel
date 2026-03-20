@@ -155,19 +155,19 @@ export default function ContactsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Contact form submissions from visitors
         </p>
       </div>
 
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => { setActiveTab("all"); setSelected(null); }}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             activeTab === "all"
-              ? "border-primary-600 text-primary-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600"
           }`}
         >
           All Messages
@@ -176,8 +176,8 @@ export default function ContactsPage() {
           onClick={() => { setActiveTab("inquiry"); setSelected(null); }}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             activeTab === "inquiry"
-              ? "border-primary-600 text-primary-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600"
           }`}
         >
           Inquiries
@@ -186,8 +186,8 @@ export default function ContactsPage() {
           onClick={() => { setActiveTab("tailor-made"); setSelected(null); }}
           className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             activeTab === "tailor-made"
-              ? "border-primary-600 text-primary-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              ? "border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600"
           }`}
         >
           Tailor Made
@@ -225,15 +225,15 @@ export default function ContactsPage() {
           {loading ? (
             [1, 2, 3].map((i) => (
               <div key={i} className="card animate-pulse">
-                <div className="h-5 w-1/3 rounded bg-gray-200" />
-                <div className="mt-2 h-4 w-2/3 rounded bg-gray-200" />
+                <div className="h-5 w-1/3 rounded bg-gray-200 dark:bg-gray-700" />
+                <div className="mt-2 h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700" />
               </div>
             ))
           ) : filteredContacts.length === 0 ? (
             <div className="card flex flex-col items-center justify-center py-12 text-center">
-              <MessageSquare className="mb-4 h-12 w-12 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900">No messages</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <MessageSquare className="mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">No messages</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 Messages will appear here when visitors submit the contact form
               </p>
             </div>
@@ -242,41 +242,41 @@ export default function ContactsPage() {
               <button
                 key={contact.id}
                 onClick={() => openContact(contact)}
-                className={`card w-full text-left transition-colors hover:border-primary-200 ${
-                  selected?.id === contact.id ? "border-primary-300 bg-primary-50/50" : ""
+                className={`card w-full text-left transition-colors hover:border-primary-200 dark:hover:border-primary-700 ${
+                  selected?.id === contact.id ? "border-primary-300 bg-primary-50/50 dark:border-primary-600 dark:bg-primary-900/20" : ""
                 } ${contact.status === "unread" ? "border-l-4 border-l-primary-500" : ""}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       {contact.status === "unread" ? (
-                        <Mail className="h-4 w-4 text-primary-600" />
+                        <Mail className="h-4 w-4 text-primary-600 dark:text-primary-400" />
                       ) : (
-                        <MailOpen className="h-4 w-4 text-gray-400" />
+                        <MailOpen className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       )}
-                      <span className={`text-sm ${contact.status === "unread" ? "font-semibold" : "font-medium"} text-gray-900`}>
+                      <span className={`text-sm ${contact.status === "unread" ? "font-semibold" : "font-medium"} text-gray-900 dark:text-white`}>
                         {contact.name}
                       </span>
                       {contact.type === "inquiry" && (
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                        <span className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:text-blue-400">
                           Inquiry
                         </span>
                       )}
                       {contact.type === "tailor-made" && (
-                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-700">
+                        <span className="rounded-full bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:text-purple-400">
                           Tailor Made
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 text-sm font-medium text-gray-700">{contact.subject}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-700 dark:text-gray-300">{contact.subject}</p>
                     {contact.country && (
-                      <p className="mt-0.5 text-xs text-gray-500">
+                      <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                         <Globe className="mr-1 inline h-3 w-3" />{contact.country}
                       </p>
                     )}
-                    <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{contact.message}</p>
+                    <p className="mt-0.5 line-clamp-1 text-xs text-gray-500 dark:text-gray-400">{contact.message}</p>
                   </div>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
                     {contact.createdAt ? formatDate(contact.createdAt) : ""}
                   </span>
                 </div>
@@ -290,36 +290,36 @@ export default function ContactsPage() {
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-gray-900">{selected.subject}</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{selected.subject}</h2>
                   {selected.type === "inquiry" && (
-                    <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                    <span className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-400">
                       Inquiry
                     </span>
                   )}
                   {selected.type === "tailor-made" && (
-                    <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                    <span className="rounded-full bg-purple-100 dark:bg-purple-900/30 px-2.5 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-400">
                       Tailor Made
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   From {selected.name} &middot; {selected.email}
                   {selected.phone && ` &middot; ${selected.phone}`}
                 </p>
-                <p className="mt-0.5 text-xs text-gray-400">
+                <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
                   {selected.createdAt ? formatDate(selected.createdAt) : ""}
                 </p>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleDelete(selected.id)}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setSelected(null)}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -327,40 +327,40 @@ export default function ContactsPage() {
             </div>
 
             {(selected.country || selected.whatsapp || selected.dates || selected.selectedPackage) && (
-              <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
+              <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/50 p-4">
                 {selected.country && (
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-gray-400" />
+                    <Globe className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <div>
-                      <p className="text-xs text-gray-500">Country</p>
-                      <p className="text-sm font-medium text-gray-900">{selected.country}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Country</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.country}</p>
                     </div>
                   </div>
                 )}
                 {selected.whatsapp && (
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-400" />
+                    <Phone className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <div>
-                      <p className="text-xs text-gray-500">WhatsApp</p>
-                      <p className="text-sm font-medium text-gray-900">{selected.whatsapp}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">WhatsApp</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.whatsapp}</p>
                     </div>
                   </div>
                 )}
                 {selected.dates && (
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <div>
-                      <p className="text-xs text-gray-500">Travel Dates</p>
-                      <p className="text-sm font-medium text-gray-900">{selected.dates}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Travel Dates</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.dates}</p>
                     </div>
                   </div>
                 )}
                 {selected.selectedPackage && (
                   <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-gray-400" />
+                    <Package className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <div>
-                      <p className="text-xs text-gray-500">Interested Package</p>
-                      <p className="text-sm font-medium text-gray-900">{selected.selectedPackage}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Interested Package</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.selectedPackage}</p>
                     </div>
                   </div>
                 )}
@@ -369,53 +369,53 @@ export default function ContactsPage() {
 
             {selected.tailorMade && (
               <div className="mt-4 space-y-3">
-                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-purple-500" />
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-500 dark:text-purple-400" />
                   Tailor-Made Tour Details
                 </h3>
-                <div className="grid grid-cols-2 gap-3 rounded-lg border border-purple-200 bg-purple-50/30 p-4">
+                <div className="grid grid-cols-2 gap-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-900/20 p-4">
                   {selected.tailorMade.arrivalDate && (
                     <div className="flex items-center gap-2">
-                      <Plane className="h-4 w-4 text-gray-400" />
+                      <Plane className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Arrival</p>
-                        <p className="text-sm font-medium text-gray-900">{selected.tailorMade.arrivalDate}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Arrival</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.tailorMade.arrivalDate}</p>
                       </div>
                     </div>
                   )}
                   {selected.tailorMade.departureDate && (
                     <div className="flex items-center gap-2">
-                      <Plane className="h-4 w-4 text-gray-400" />
+                      <Plane className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Departure</p>
-                        <p className="text-sm font-medium text-gray-900">{selected.tailorMade.departureDate}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Departure</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.tailorMade.departureDate}</p>
                       </div>
                     </div>
                   )}
                   {selected.tailorMade.pickupPlace && (
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <MapPin className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Pickup Place</p>
-                        <p className="text-sm font-medium text-gray-900">{selected.tailorMade.pickupPlace}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Pickup Place</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.tailorMade.pickupPlace}</p>
                       </div>
                     </div>
                   )}
                   {selected.tailorMade.groupSize && (
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-gray-400" />
+                      <Users className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Group Size</p>
-                        <p className="text-sm font-medium text-gray-900 capitalize">{selected.tailorMade.groupSize}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Group Size</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">{selected.tailorMade.groupSize}</p>
                       </div>
                     </div>
                   )}
                   {selected.tailorMade.numAdults && (
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-gray-400" />
+                      <Users className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Adults</p>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Adults</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {selected.tailorMade.numAdults}
                           {selected.tailorMade.ageGroupAdults?.length ? ` (${selected.tailorMade.ageGroupAdults.join(", ")})` : ""}
                         </p>
@@ -424,10 +424,10 @@ export default function ContactsPage() {
                   )}
                   {selected.tailorMade.numChildren && selected.tailorMade.numChildren !== "0" && (
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-gray-400" />
+                      <Users className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Children</p>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Children</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {selected.tailorMade.numChildren}
                           {selected.tailorMade.ageGroupChildren?.length ? ` (${selected.tailorMade.ageGroupChildren.join(", ")})` : ""}
                         </p>
@@ -436,38 +436,38 @@ export default function ContactsPage() {
                   )}
                   {selected.tailorMade.tourDuration && (
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-gray-400" />
+                      <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Duration</p>
-                        <p className="text-sm font-medium text-gray-900">{selected.tailorMade.tourDuration}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Duration</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.tailorMade.tourDuration}</p>
                       </div>
                     </div>
                   )}
                   {selected.tailorMade.accommodation && (
                     <div className="flex items-center gap-2">
-                      <Hotel className="h-4 w-4 text-gray-400" />
+                      <Hotel className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Accommodation</p>
-                        <p className="text-sm font-medium text-gray-900 capitalize">{selected.tailorMade.accommodation}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Accommodation</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">{selected.tailorMade.accommodation}</p>
                       </div>
                     </div>
                   )}
                   {selected.tailorMade.budgetRange && (
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-gray-400" />
+                      <DollarSign className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       <div>
-                        <p className="text-xs text-gray-500">Budget (per person)</p>
-                        <p className="text-sm font-medium text-gray-900">{selected.tailorMade.budgetRange}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Budget (per person)</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{selected.tailorMade.budgetRange}</p>
                       </div>
                     </div>
                   )}
                 </div>
                 {selected.tailorMade.interests && selected.tailorMade.interests.length > 0 && (
-                  <div className="rounded-lg border border-purple-200 bg-purple-50/30 p-4">
-                    <p className="text-xs text-gray-500 mb-2">Interests</p>
+                  <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-900/20 p-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Interests</p>
                     <div className="flex flex-wrap gap-1.5">
                       {selected.tailorMade.interests.map((interest) => (
-                        <span key={interest} className="rounded-full bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700 capitalize">
+                        <span key={interest} className="rounded-full bg-purple-100 dark:bg-purple-900/50 px-2.5 py-1 text-xs font-medium text-purple-700 dark:text-purple-400 capitalize">
                           {interest}
                         </span>
                       ))}
@@ -475,15 +475,15 @@ export default function ContactsPage() {
                   </div>
                 )}
                 {selected.tailorMade.specialRequirements && (
-                  <div className="rounded-lg border border-purple-200 bg-purple-50/30 p-4">
-                    <p className="text-xs text-gray-500 mb-1">Special Requirements</p>
-                    <p className="text-sm text-gray-900">{selected.tailorMade.specialRequirements}</p>
+                  <div className="rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-900/20 p-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Special Requirements</p>
+                    <p className="text-sm text-gray-900 dark:text-white">{selected.tailorMade.specialRequirements}</p>
                   </div>
                 )}
               </div>
             )}
 
-            <div className="mt-4 whitespace-pre-wrap rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
+            <div className="mt-4 whitespace-pre-wrap rounded-lg bg-gray-50 dark:bg-gray-700/50 p-4 text-sm text-gray-700 dark:text-gray-300">
               {selected.message}
             </div>
             <div className="mt-4 flex gap-2">
