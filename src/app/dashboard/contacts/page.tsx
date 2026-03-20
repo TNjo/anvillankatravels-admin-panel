@@ -92,6 +92,31 @@ export default function ContactsPage() {
     }
   };
 
+  const markAsReplied = async (contact: Contact) => {
+    if (contact.status === "replied") return;
+
+    try {
+      const token = await getToken();
+      await fetch(`/api/contacts/${contact.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "replied" }),
+      });
+
+      setContacts(
+        contacts.map((c) =>
+          c.id === contact.id ? { ...c, status: "replied" as const } : c
+        )
+      );
+      setSelected({ ...contact, status: "replied" });
+    } catch {
+      console.error("Failed to mark as replied");
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this message?")) return;
 
@@ -463,11 +488,14 @@ export default function ContactsPage() {
             </div>
             <div className="mt-4 flex gap-2">
               <a
-                href={`mailto:${selected.email}?subject=Re: ${selected.subject}`}
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(selected.email)}&su=${encodeURIComponent(`Re: ${selected.subject}`)}&body=${encodeURIComponent(`\n\n\n---\nOriginal message from ${selected.name}:\n${selected.message}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn-primary"
+                onClick={() => markAsReplied(selected)}
               >
                 <Mail className="mr-2 h-4 w-4" />
-                Reply via Email
+                Reply via Gmail
               </a>
               {selected.whatsapp && (
                 <a
@@ -475,6 +503,7 @@ export default function ContactsPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center rounded-lg border border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition-colors hover:bg-green-100"
+                  onClick={() => markAsReplied(selected)}
                 >
                   <Phone className="mr-2 h-4 w-4" />
                   Reply via WhatsApp
