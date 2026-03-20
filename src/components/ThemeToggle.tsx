@@ -26,7 +26,7 @@ export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
     { value: "system", label: "System", icon: Monitor },
   ] as const;
 
-  const currentIcon = resolvedTheme === "dark" ? Moon : Sun;
+  const CurrentIcon = resolvedTheme === "dark" ? Moon : Sun;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -37,7 +37,7 @@ export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
         }`}
         title={collapsed ? "Theme" : undefined}
       >
-        <currentIcon className="h-5 w-5 shrink-0" />
+        <CurrentIcon className="h-5 w-5 shrink-0" />
         {!collapsed && "Theme"}
       </button>
 
