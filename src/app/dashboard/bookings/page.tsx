@@ -2,34 +2,60 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { CalendarCheck, Search, ChevronDown } from "lucide-react";
+import {
+  CalendarCheck,
+  Search,
+  ChevronDown,
+  Plus,
+  Eye,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
-import type { Booking } from "@/types";
+import type { Booking, Tour, DayTour } from "@/types";
+import BookingModal from "@/components/BookingModal";
+import BookingDetailModal from "@/components/BookingDetailModal";
 
-const STATUS_OPTIONS = ["pending", "confirmed", "cancelled", "completed"] as const;
+const STATUS_OPTIONS = ["pending", "confirmed", "in-progress", "completed", "cancelled"] as const;
 
 const statusBadge: Record<string, string> = {
   pending: "badge-warning",
   confirmed: "badge-success",
+  "in-progress": "badge-info",
+  completed: "badge-neutral",
   cancelled: "badge-danger",
-  completed: "badge-info",
+};
+
+const paymentBadge: Record<string, string> = {
+  unpaid: "bg-red-100 text-red-700",
+  "deposit-paid": "bg-yellow-100 text-yellow-700",
+  "fully-paid": "bg-green-100 text-green-700",
+  refunded: "bg-gray-100 text-gray-700",
 };
 
 export default function BookingsPage() {
   const { getToken } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [dayTours, setDayTours] = useState<DayTour[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const fetchBookings = async (status?: string) => {
     setLoading(true);
     try {
       const token = await getToken();
-      const url = status && status !== "all"
-        ? `/api/bookings?status=${status}`
-        : "/api/bookings";
+      const url =
+        status && status !== "all"
+          ? `/api/bookings?status=${status}`
+          : "/api/bookings";
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -44,8 +70,32 @@ export default function BookingsPage() {
     }
   };
 
+  const fetchTours = async () => {
+    try {
+      const token = await getToken();
+      const [toursRes, dayToursRes] = await Promise.all([
+        fetch("/api/tours?all=true", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/day-tours", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      if (toursRes.ok) {
+        setTours(await toursRes.json());
+      }
+      if (dayToursRes.ok) {
+        setDayTours(await dayToursRes.json());
+      }
+    } catch (error) {
+      console.error("Failed to fetch tours:", error);
+    }
+  };
+
   useEffect(() => {
     fetchBookings(filterStatus);
+    fetchTours();
   }, [filterStatus]);
 
   const updateStatus = async (id: string, status: string) => {
@@ -64,7 +114,11 @@ export default function BookingsPage() {
         if (filterStatus !== "all" && status !== filterStatus) {
           setBookings(bookings.filter((b) => b.id !== id));
         } else {
-          setBookings(bookings.map((b) => (b.id === id ? { ...b, status: status as Booking["status"] } : b)));
+          setBookings(
+            bookings.map((b) =>
+              b.id === id ? { ...b, status: status as Booking["status"] } : b
+            )
+          );
         }
         toast.success(`Booking ${status}`);
       }
@@ -73,23 +127,133 @@ export default function BookingsPage() {
     }
   };
 
+  const handleSaveBooking = async (bookingData: Partial<Booking>) => {
+    try {
+      const token = await getToken();
+
+      if (selectedBooking) {
+        const res = await fetch(`/api/bookings/${selectedBooking.id}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(bookingData),
+        });
+
+        if (res.ok) {
+          const updated = await res.json();
+          setBookings(
+            bookings.map((b) =>
+              b.id === selectedBooking.id ? { ...b, ...updated } : b
+            )
+          );
+          toast.success("Booking updated successfully");
+        } else {
+          throw new Error("Failed to update");
+        }
+      } else {
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(bookingData),
+        });
+
+        if (res.ok) {
+          const newBooking = await res.json();
+          setBookings([newBooking, ...bookings]);
+          toast.success("Booking created successfully");
+        } else {
+          throw new Error("Failed to create");
+        }
+      }
+    } catch {
+      toast.error(
+        selectedBooking ? "Failed to update booking" : "Failed to create booking"
+      );
+      throw new Error("Save failed");
+    }
+  };
+
+  const handleDeleteBooking = async (id: string) => {
+    try {
+      const token = await getToken();
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        setBookings(bookings.filter((b) => b.id !== id));
+        toast.success("Booking deleted successfully");
+      } else {
+        throw new Error("Failed to delete");
+      }
+    } catch {
+      toast.error("Failed to delete booking");
+    } finally {
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const openAddModal = () => {
+    setSelectedBooking(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
+
+  const openDetailModal = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsDetailModalOpen(true);
+  };
+
   const filteredBookings = bookings.filter((b) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
       b.customerName?.toLowerCase().includes(q) ||
       b.tourName?.toLowerCase().includes(q) ||
-      b.customerEmail?.toLowerCase().includes(q)
+      b.customerEmail?.toLowerCase().includes(q) ||
+      b.customerPhone?.toLowerCase().includes(q)
     );
   });
 
+  const getTotalGuests = (booking: Booking) => {
+    return (booking.numberOfAdults || 0) + (booking.numberOfChildren || 0);
+  };
+
+  const formatCurrency = (amount: number | undefined, currency: string | undefined) => {
+    if (!amount) return "—";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage tour booking requests and inquiries
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage tour bookings and reservations
+          </p>
+        </div>
+        <button
+          onClick={openAddModal}
+          className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+        >
+          <Plus className="h-4 w-4" />
+          Add Booking
+        </button>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -97,7 +261,7 @@ export default function BookingsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by name, email, or tour..."
+            placeholder="Search by name, email, phone, or tour..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-10"
@@ -112,7 +276,10 @@ export default function BookingsPage() {
             <option value="all">All Statuses</option>
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
+                {s
+                  .split("-")
+                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ")}
               </option>
             ))}
           </select>
@@ -133,8 +300,17 @@ export default function BookingsPage() {
           <p className="mt-1 text-sm text-gray-500">
             {search || filterStatus !== "all"
               ? "Try adjusting your search or filter"
-              : "Bookings will appear here when customers submit requests"}
+              : "Click 'Add Booking' to create your first booking"}
           </p>
+          {!search && filterStatus === "all" && (
+            <button
+              onClick={openAddModal}
+              className="mt-4 flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+            >
+              <Plus className="h-4 w-4" />
+              Add Booking
+            </button>
+          )}
         </div>
       ) : (
         <div className="card overflow-hidden p-0">
@@ -149,10 +325,13 @@ export default function BookingsPage() {
                     Tour
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Date
+                    Dates
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Guests
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Price
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Status
@@ -166,35 +345,104 @@ export default function BookingsPage() {
                 {filteredBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3">
-                      <p className="text-sm font-medium text-gray-900">{booking.customerName}</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {booking.customerName}
+                      </p>
                       <p className="text-xs text-gray-500">{booking.customerEmail}</p>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {booking.tourName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {booking.preferredDate ? formatDate(booking.preferredDate) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {booking.numberOfGuests}
+                      <p className="text-xs text-gray-400">{booking.customerPhone}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={statusBadge[booking.status] || "badge-neutral"}>
-                        {booking.status}
-                      </span>
+                      <p className="text-sm text-gray-700">{booking.tourName}</p>
+                      <p className="text-xs text-gray-400">
+                        {booking.tourType === "multi-day"
+                          ? "Multi-Day"
+                          : booking.tourType === "day-tour"
+                          ? "Day Tour"
+                          : "Custom"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-sm text-gray-600">
+                        {booking.preferredDate
+                          ? formatDate(booking.preferredDate)
+                          : "—"}
+                      </p>
+                      {booking.endDate && (
+                        <p className="text-xs text-gray-400">
+                          to {formatDate(booking.endDate)}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-sm text-gray-600">
+                        {getTotalGuests(booking)} total
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {booking.numberOfAdults || 0} adults
+                        {(booking.numberOfChildren || 0) > 0 &&
+                          `, ${booking.numberOfChildren} children`}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {formatCurrency(booking.totalPrice, booking.currency)}
+                      </p>
+                      {booking.paymentStatus && (
+                        <span
+                          className={`mt-1 inline-block rounded px-1.5 py-0.5 text-xs font-medium ${
+                            paymentBadge[booking.paymentStatus] ||
+                            "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {booking.paymentStatus
+                            .split("-")
+                            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                            .join(" ")}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <select
                         value={booking.status}
                         onChange={(e) => updateStatus(booking.id, e.target.value)}
-                        className="rounded border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary-500"
+                        className={`rounded border px-2 py-1 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary-500 ${
+                          statusBadge[booking.status] || "badge-neutral"
+                        }`}
                       >
                         {STATUS_OPTIONS.map((s) => (
                           <option key={s} value={s}>
-                            {s.charAt(0).toUpperCase() + s.slice(1)}
+                            {s
+                              .split("-")
+                              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                              .join(" ")}
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openDetailModal(booking)}
+                          className="rounded-lg p-2 text-blue-600 hover:bg-blue-50 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => openEditModal(booking)}
+                          className="rounded-lg p-2 text-amber-600 hover:bg-amber-50 transition-colors"
+                          title="Edit Booking"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(booking.id)}
+                          className="rounded-lg p-2 text-red-600 hover:bg-red-50 transition-colors"
+                          title="Delete Booking"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -203,6 +451,56 @@ export default function BookingsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">Delete Booking</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Are you sure you want to delete this booking? This action cannot be
+              undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteBooking(deleteConfirmId)}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Modal for Add/Edit */}
+      <BookingModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBooking(null);
+        }}
+        onSave={handleSaveBooking}
+        booking={selectedBooking}
+        tours={tours}
+        dayTours={dayTours}
+      />
+
+      {/* Booking Detail Modal */}
+      <BookingDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedBooking(null);
+        }}
+        booking={selectedBooking}
+      />
     </div>
   );
 }

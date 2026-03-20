@@ -35,13 +35,41 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get("Authorization");
+  const isAdminRequest = authHeader?.startsWith("Bearer ");
+
+  if (isAdminRequest) {
+    const user = await verifyAuth(request);
+    if (!user) return unauthorizedResponse();
+  }
+
   try {
     const body = await request.json();
     const now = new Date().toISOString();
 
     const bookingData: Omit<Booking, "id"> = {
-      ...body,
-      status: "pending",
+      tourId: body.tourId || "",
+      tourType: body.tourType || "multi-day",
+      tourName: body.tourName || "",
+      customerName: body.customerName || "",
+      customerEmail: body.customerEmail || "",
+      customerPhone: body.customerPhone || "",
+      customerCountry: body.customerCountry || "",
+      numberOfAdults: body.numberOfAdults || body.numberOfGuests || 1,
+      numberOfChildren: body.numberOfChildren || 0,
+      childrenAges: body.childrenAges || "",
+      preferredDate: body.preferredDate || "",
+      endDate: body.endDate || "",
+      pickupLocation: body.pickupLocation || "",
+      dropoffLocation: body.dropoffLocation || "",
+      accommodationType: body.accommodationType || "mid-range",
+      totalPrice: body.totalPrice || 0,
+      currency: body.currency || "USD",
+      depositPaid: body.depositPaid || 0,
+      paymentStatus: body.paymentStatus || "unpaid",
+      specialRequests: body.specialRequests || "",
+      internalNotes: body.internalNotes || "",
+      status: body.status || "pending",
       createdAt: now,
       updatedAt: now,
     };

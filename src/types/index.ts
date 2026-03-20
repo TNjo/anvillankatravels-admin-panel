@@ -98,14 +98,27 @@ export interface DayTour {
 export interface Booking {
   id: string;
   tourId: string;
+  tourType: "multi-day" | "day-tour" | "custom";
   tourName: string;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  numberOfGuests: number;
+  customerCountry?: string;
+  numberOfAdults: number;
+  numberOfChildren?: number;
+  childrenAges?: string;
   preferredDate: string;
+  endDate?: string;
+  pickupLocation?: string;
+  dropoffLocation?: string;
+  accommodationType?: "budget" | "mid-range" | "luxury" | "not-required";
+  totalPrice?: number;
+  currency?: string;
+  depositPaid?: number;
+  paymentStatus?: "unpaid" | "deposit-paid" | "fully-paid" | "refunded";
   specialRequests?: string;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
+  internalNotes?: string;
+  status: "pending" | "confirmed" | "cancelled" | "completed" | "in-progress";
   createdAt: string;
   updatedAt: string;
 }
@@ -156,4 +169,16 @@ export interface SiteSettings {
     twitter?: string;
     youtube?: string;
   };
+}
+
+export interface TravelMemory {
+  id: string;
+  imageUrl: string;
+  title?: string;
+  location?: string;
+  caption?: string;
+  order: number;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
