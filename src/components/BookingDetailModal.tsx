@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Mail, Phone, MapPin, Calendar, Users, CreditCard, FileText } from "lucide-react";
+import { X, Mail, Phone, MapPin, Calendar, Users, CreditCard, FileText, Car, UserCircle } from "lucide-react";
 import type { Booking } from "@/types";
 import { formatDate } from "@/lib/utils";
 
@@ -207,6 +207,55 @@ export default function BookingDetailModal({
               </div>
             </div>
           </div>
+
+          {/* Trip Assignment */}
+          {(booking.vehicleId || booking.guideId) && (
+            <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20 p-4">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                Trip Assignment
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {booking.vehicleId && booking.vehicleInfo && (
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+                      <Car className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Assigned Vehicle</span>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {booking.vehicleInfo.registrationNumber}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {booking.vehicleInfo.brand} {booking.vehicleInfo.model}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                        {booking.vehicleInfo.type}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {booking.guideId && booking.guideInfo && (
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/50">
+                      <UserCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Assigned Tour Guide</span>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {booking.guideInfo.name}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {booking.guideInfo.phone}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {booking.guideInfo.languages?.join(", ")}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Notes */}
           {(booking.specialRequests || booking.internalNotes) && (

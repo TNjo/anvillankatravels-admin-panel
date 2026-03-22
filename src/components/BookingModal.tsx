@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Loader2 } from "lucide-react";
-import type { Booking, Tour, DayTour } from "@/types";
+import { X, Loader2, Car, UserCircle } from "lucide-react";
+import type { Booking, Tour, DayTour, Vehicle, TourGuide } from "@/types";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -11,6 +11,8 @@ interface BookingModalProps {
   booking?: Booking | null;
   tours: Tour[];
   dayTours: DayTour[];
+  vehicles?: Vehicle[];
+  guides?: TourGuide[];
 }
 
 const STATUS_OPTIONS = ["pending", "confirmed", "in-progress", "completed", "cancelled"] as const;
@@ -25,6 +27,8 @@ export default function BookingModal({
   booking,
   tours,
   dayTours,
+  vehicles = [],
+  guides = [],
 }: BookingModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Booking>>({
@@ -50,6 +54,8 @@ export default function BookingModal({
     specialRequests: "",
     internalNotes: "",
     status: "pending",
+    vehicleId: "",
+    guideId: "",
   });
 
   useEffect(() => {
@@ -77,6 +83,8 @@ export default function BookingModal({
         specialRequests: booking.specialRequests || "",
         internalNotes: booking.internalNotes || "",
         status: booking.status || "pending",
+        vehicleId: booking.vehicleId || "",
+        guideId: booking.guideId || "",
       });
     } else {
       setFormData({
@@ -102,9 +110,54 @@ export default function BookingModal({
         specialRequests: "",
         internalNotes: "",
         status: "pending",
+        vehicleId: "",
+        guideId: "",
       });
     }
   }, [booking, isOpen]);
+
+  const handleVehicleSelect = (vehicleId: string) => {
+    const selectedVehicle = vehicles.find((v) => v.id === vehicleId);
+    if (selectedVehicle) {
+      setFormData({
+        ...formData,
+        vehicleId: selectedVehicle.id,
+        vehicleInfo: {
+          registrationNumber: selectedVehicle.registrationNumber,
+          type: selectedVehicle.type,
+          brand: selectedVehicle.brand,
+          model: selectedVehicle.model,
+        },
+      });
+    } else {
+      setFormData({
+        ...formData,
+        vehicleId: "",
+        vehicleInfo: undefined,
+      });
+    }
+  };
+
+  const handleGuideSelect = (guideId: string) => {
+    const selectedGuide = guides.find((g) => g.id === guideId);
+    if (selectedGuide) {
+      setFormData({
+        ...formData,
+        guideId: selectedGuide.id,
+        guideInfo: {
+          name: selectedGuide.name,
+          phone: selectedGuide.phone,
+          languages: selectedGuide.languages,
+        },
+      });
+    } else {
+      setFormData({
+        ...formData,
+        guideId: "",
+        guideInfo: undefined,
+      });
+    }
+  };
 
   const handleTourSelect = (tourId: string) => {
     if (formData.tourType === "multi-day") {
@@ -560,6 +613,71 @@ export default function BookingModal({
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Assignment Section */}
+            <div className="col-span-2 mt-4">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Trip Assignment
+              </h3>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="flex items-center gap-2">
+                  <Car className="h-4 w-4" />
+                  Assign Vehicle
+                </span>
+              </label>
+              <select
+                value={formData.vehicleId || ""}
+                onChange={(e) => handleVehicleSelect(e.target.value)}
+                className="input"
+              >
+                <option value="">No vehicle assigned</option>
+                {vehicles
+                  .filter((v) => v.status === "available" || v.id === formData.vehicleId)
+                  .map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.registrationNumber} - {vehicle.brand} {vehicle.model} ({vehicle.capacity} seats)
+                      {vehicle.status !== "available" && ` [${vehicle.status}]`}
+                    </option>
+                  ))}
+              </select>
+              {formData.vehicleId && formData.vehicleInfo && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Selected: {formData.vehicleInfo.brand} {formData.vehicleInfo.model} ({formData.vehicleInfo.type})
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="flex items-center gap-2">
+                  <UserCircle className="h-4 w-4" />
+                  Assign Tour Guide
+                </span>
+              </label>
+              <select
+                value={formData.guideId || ""}
+                onChange={(e) => handleGuideSelect(e.target.value)}
+                className="input"
+              >
+                <option value="">No guide assigned</option>
+                {guides
+                  .filter((g) => g.status === "available" || g.id === formData.guideId)
+                  .map((guide) => (
+                    <option key={guide.id} value={guide.id}>
+                      {guide.name} - {guide.languages?.slice(0, 2).join(", ")}
+                      {guide.status !== "available" && ` [${guide.status}]`}
+                    </option>
+                  ))}
+              </select>
+              {formData.guideId && formData.guideInfo && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Selected: {formData.guideInfo.name} ({formData.guideInfo.languages?.join(", ")})
+                </p>
+              )}
             </div>
 
             {/* Notes Section */}

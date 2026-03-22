@@ -17,6 +17,8 @@ import {
   Building2,
   Languages,
   Camera,
+  Car,
+  UserCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
@@ -28,6 +30,8 @@ const navItems = [
   { href: "/dashboard/hotels", label: "Hotels", icon: Building2 },
   { href: "/dashboard/day-tours", label: "Day Tours", icon: Sun },
   { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck },
+  { href: "/dashboard/vehicles", label: "Vehicles", icon: Car },
+  { href: "/dashboard/tour-guides", label: "Tour Guides", icon: UserCircle },
   { href: "/dashboard/travel-memories", label: "Travel Memories", icon: Camera },
   { href: "/dashboard/contacts", label: "Messages", icon: MessageSquare },
   { href: "/dashboard/translations", label: "Translations", icon: Languages },

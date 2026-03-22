@@ -119,6 +119,19 @@ export interface Booking {
   specialRequests?: string;
   internalNotes?: string;
   status: "pending" | "confirmed" | "cancelled" | "completed" | "in-progress";
+  vehicleId?: string;
+  vehicleInfo?: {
+    registrationNumber: string;
+    type: string;
+    brand: string;
+    model: string;
+  };
+  guideId?: string;
+  guideInfo?: {
+    name: string;
+    phone: string;
+    languages: string[];
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -179,6 +192,41 @@ export interface TravelMemory {
   caption?: string;
   order: number;
   published: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Vehicle {
+  id: string;
+  registrationNumber: string;
+  type: "car" | "van" | "mini-bus" | "bus" | "suv" | "luxury";
+  brand: string;
+  model: string;
+  year?: number;
+  capacity: number;
+  color?: string;
+  features?: string[];
+  imageUrl?: string;
+  status: "available" | "on-trip" | "maintenance" | "retired";
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TourGuide {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  languages: string[];
+  specializations?: string[];
+  experience?: number;
+  bio?: string;
+  imageUrl?: string;
+  licenseNumber?: string;
+  status: "available" | "on-trip" | "unavailable";
+  rating?: number;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
-import type { Booking, Tour, DayTour } from "@/types";
+import type { Booking, Tour, DayTour, Vehicle, TourGuide } from "@/types";
 import BookingModal from "@/components/BookingModal";
 import BookingDetailModal from "@/components/BookingDetailModal";
 
@@ -39,6 +39,8 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
   const [dayTours, setDayTours] = useState<DayTour[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [guides, setGuides] = useState<TourGuide[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -93,9 +95,33 @@ export default function BookingsPage() {
     }
   };
 
+  const fetchVehiclesAndGuides = async () => {
+    try {
+      const token = await getToken();
+      const [vehiclesRes, guidesRes] = await Promise.all([
+        fetch("/api/vehicles", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/tour-guides", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      if (vehiclesRes.ok) {
+        setVehicles(await vehiclesRes.json());
+      }
+      if (guidesRes.ok) {
+        setGuides(await guidesRes.json());
+      }
+    } catch (error) {
+      console.error("Failed to fetch vehicles/guides:", error);
+    }
+  };
+
   useEffect(() => {
     fetchBookings(filterStatus);
     fetchTours();
+    fetchVehiclesAndGuides();
   }, [filterStatus]);
 
   const updateStatus = async (id: string, status: string) => {
@@ -490,6 +516,8 @@ export default function BookingsPage() {
         booking={selectedBooking}
         tours={tours}
         dayTours={dayTours}
+        vehicles={vehicles}
+        guides={guides}
       />
 
       {/* Booking Detail Modal */}
