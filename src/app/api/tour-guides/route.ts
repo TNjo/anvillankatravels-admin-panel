@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  query,
-  orderBy,
-  where,
-} from "firebase/firestore";
+import { adminDb } from "@/lib/firebase-admin";
 import { verifyAuth } from "@/lib/auth";
+
+const COLLECTION = "tourGuides";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,25 +15,19 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const available = searchParams.get("available");
 
-    let q = query(collection(db, "tourGuides"), orderBy("createdAt", "desc"));
+    let query: FirebaseFirestore.Query = adminDb
+      .collection(COLLECTION)
+      .orderBy("createdAt", "desc");
 
     if (status) {
-      q = query(
-        collection(db, "tourGuides"),
-        where("status", "==", status),
-        orderBy("createdAt", "desc")
-      );
+      query = query.where("status", "==", status);
     }
 
     if (available === "true") {
-      q = query(
-        collection(db, "tourGuides"),
-        where("status", "==", "available"),
-        orderBy("createdAt", "desc")
-      );
+      query = query.where("status", "==", "available");
     }
 
-    const snapshot = await getDocs(q);
+    const snapshot = await query.get();
     const guides = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -82,7 +70,7 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     };
 
-    const docRef = await addDoc(collection(db, "tourGuides"), guideData);
+    const docRef = await adminDb.collection(COLLECTION).add(guideData);
 
     return NextResponse.json({ id: docRef.id, ...guideData }, { status: 201 });
   } catch (error) {

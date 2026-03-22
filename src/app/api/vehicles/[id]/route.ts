@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { adminDb } from "@/lib/firebase-admin";
 import { verifyAuth } from "@/lib/auth";
+
+const COLLECTION = "vehicles";
 
 export async function GET(
   request: NextRequest,
@@ -14,10 +15,10 @@ export async function GET(
     }
 
     const { id } = await params;
-    const docRef = doc(db, "vehicles", id);
-    const docSnap = await getDoc(docRef);
+    const docRef = adminDb.collection(COLLECTION).doc(id);
+    const docSnap = await docRef.get();
 
-    if (!docSnap.exists()) {
+    if (!docSnap.exists) {
       return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
     }
 
@@ -43,7 +44,7 @@ export async function PUT(
 
     const { id } = await params;
     const data = await request.json();
-    const docRef = doc(db, "vehicles", id);
+    const docRef = adminDb.collection(COLLECTION).doc(id);
 
     const updateData: Record<string, unknown> = {
       updatedAt: new Date().toISOString(),
@@ -69,9 +70,9 @@ export async function PUT(
       }
     });
 
-    await updateDoc(docRef, updateData);
+    await docRef.update(updateData);
 
-    const updatedDoc = await getDoc(docRef);
+    const updatedDoc = await docRef.get();
     return NextResponse.json({ id: updatedDoc.id, ...updatedDoc.data() });
   } catch (error) {
     console.error("Error updating vehicle:", error);
@@ -93,8 +94,8 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const docRef = doc(db, "vehicles", id);
-    await deleteDoc(docRef);
+    const docRef = adminDb.collection(COLLECTION).doc(id);
+    await docRef.delete();
 
     return NextResponse.json({ success: true });
   } catch (error) {
