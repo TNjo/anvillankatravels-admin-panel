@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import {
   UserCircle,
@@ -14,6 +14,8 @@ import {
   Mail,
   Languages,
   Star,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { TourGuide } from "@/types";
@@ -385,7 +387,10 @@ interface GuideModalProps {
 }
 
 function GuideModal({ isOpen, onClose, onSave, guide }: GuideModalProps) {
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -434,6 +439,41 @@ function GuideModal({ isOpen, onClose, onSave, guide }: GuideModalProps) {
       });
     }
   }, [guide, isOpen]);
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const token = await getToken();
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("folder", "tour-guides");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataUpload,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setFormData((prev) => ({ ...prev, imageUrl: data.url }));
+      toast.success("Photo uploaded successfully");
+    } catch {
+      toast.error("Failed to upload photo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file);
+  };
 
   const toggleLanguage = (lang: string) => {
     setFormData((prev) => ({
@@ -495,6 +535,82 @@ function GuideModal({ isOpen, onClose, onSave, guide }: GuideModalProps) {
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
+            {/* Profile Photo */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Profile Photo
+              </label>
+              <div className="flex items-start gap-4">
+                {formData.imageUrl ? (
+                  <div className="group relative">
+                    <img
+                      src={formData.imageUrl}
+                      alt="Tour Guide"
+                      className="h-24 w-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center gap-1 rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="rounded-full bg-white p-1.5 text-gray-700 shadow-sm hover:bg-gray-50"
+                        title="Replace"
+                      >
+                        <Upload className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                        className="rounded-full bg-red-500 p-1.5 text-white shadow-sm hover:bg-red-600"
+                        title="Remove"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => !uploading && fileInputRef.current?.click()}
+                    className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 transition-colors hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-primary-600 dark:text-primary-400" />
+                    ) : (
+                      <ImageIcon className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+                    )}
+                  </div>
+                )}
+                <div className="flex-1 text-sm text-gray-500 dark:text-gray-400">
+                  <p className="font-medium text-gray-700 dark:text-gray-300">Upload a profile photo</p>
+                  <p className="text-xs">JPG, PNG, or WebP. Recommended: 200x200px</p>
+                  {!formData.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="mt-2 inline-flex items-center gap-1 rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" /> Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-3 w-3" /> Choose Photo
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Full Name *

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import {
   Car,
@@ -11,6 +11,8 @@ import {
   X,
   Loader2,
   Users,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Vehicle } from "@/types";
@@ -237,7 +239,16 @@ export default function VehiclesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredVehicles.map((vehicle) => (
-            <div key={vehicle.id} className="card">
+            <div key={vehicle.id} className="card overflow-hidden">
+              {vehicle.imageUrl && (
+                <div className="-mx-4 -mt-4 mb-4">
+                  <img
+                    src={vehicle.imageUrl}
+                    alt={`${vehicle.brand} ${vehicle.model}`}
+                    className="h-36 w-full object-cover"
+                  />
+                </div>
+              )}
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -337,7 +348,10 @@ interface VehicleModalProps {
 }
 
 function VehicleModal({ isOpen, onClose, onSave, vehicle }: VehicleModalProps) {
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     registrationNumber: "",
     type: "car" as Vehicle["type"],
@@ -384,6 +398,41 @@ function VehicleModal({ isOpen, onClose, onSave, vehicle }: VehicleModalProps) {
     }
   }, [vehicle, isOpen]);
 
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const token = await getToken();
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("folder", "vehicles");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataUpload,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setFormData((prev) => ({ ...prev, imageUrl: data.url }));
+      toast.success("Image uploaded successfully");
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -410,8 +459,8 @@ function VehicleModal({ isOpen, onClose, onSave, vehicle }: VehicleModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4">
-      <div className="relative w-full max-w-lg rounded-lg bg-white dark:bg-gray-800 shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white dark:bg-gray-800 shadow-xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {vehicle ? "Edit Vehicle" : "Add New Vehicle"}
           </h2>
@@ -425,6 +474,65 @@ function VehicleModal({ isOpen, onClose, onSave, vehicle }: VehicleModalProps) {
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
+            {/* Vehicle Photo */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Vehicle Photo
+              </label>
+              {formData.imageUrl ? (
+                <div className="group relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                  <img
+                    src={formData.imageUrl}
+                    alt="Vehicle"
+                    className="h-40 w-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                    >
+                      <Upload className="mr-1 inline h-3 w-3" /> Replace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                      className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-600"
+                    >
+                      <X className="mr-1 inline h-3 w-3" /> Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onClick={() => !uploading && fileInputRef.current?.click()}
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 p-6 transition-colors hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="mb-2 h-8 w-8 animate-spin text-primary-600 dark:text-primary-400" />
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="mb-2 h-8 w-8 text-gray-400 dark:text-gray-500" />
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                        Click to upload vehicle photo
+                      </span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">JPG, PNG, WebP</span>
+                    </>
+                  )}
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">

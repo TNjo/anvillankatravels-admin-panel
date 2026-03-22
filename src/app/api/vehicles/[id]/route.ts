@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     const authResult = await verifyAuth(request);
-    if (!authResult.authenticated) {
+    if (!authResult || !authResult.authenticated) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -38,7 +38,7 @@ export async function PUT(
 ) {
   try {
     const authResult = await verifyAuth(request);
-    if (!authResult.authenticated) {
+    if (!authResult || !authResult.authenticated) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -89,7 +89,7 @@ export async function DELETE(
 ) {
   try {
     const authResult = await verifyAuth(request);
-    if (!authResult.authenticated) {
+    if (!authResult || !authResult.authenticated) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
