@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
 
 const COLLECTION = "tourGuides";
 
@@ -8,12 +8,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const authResult = await verifyAuth(request);
-    if (!authResult || !authResult.authenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const user = await verifyAuth(request);
+  if (!user) return unauthorizedResponse();
 
+  try {
     const { id } = await params;
     const docRef = adminDb.collection(COLLECTION).doc(id);
     const docSnap = await docRef.get();
@@ -36,12 +34,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const authResult = await verifyAuth(request);
-    if (!authResult || !authResult.authenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const user = await verifyAuth(request);
+  if (!user) return unauthorizedResponse();
 
+  try {
     const { id } = await params;
     const data = await request.json();
     const docRef = adminDb.collection(COLLECTION).doc(id);
@@ -88,12 +84,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const authResult = await verifyAuth(request);
-    if (!authResult || !authResult.authenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const user = await verifyAuth(request);
+  if (!user) return unauthorizedResponse();
 
+  try {
     const { id } = await params;
     const docRef = adminDb.collection(COLLECTION).doc(id);
     await docRef.delete();

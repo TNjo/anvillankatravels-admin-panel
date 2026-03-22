@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
 
 const COLLECTION = "vehicles";
 
 export async function GET(request: NextRequest) {
-  try {
-    const authResult = await verifyAuth(request);
-    if (!authResult || !authResult.authenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const user = await verifyAuth(request);
+  if (!user) return unauthorizedResponse();
 
+  try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const available = searchParams.get("available");
@@ -44,12 +42,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const authResult = await verifyAuth(request);
-    if (!authResult || !authResult.authenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const user = await verifyAuth(request);
+  if (!user) return unauthorizedResponse();
 
+  try {
     const data = await request.json();
     const now = new Date().toISOString();
 
