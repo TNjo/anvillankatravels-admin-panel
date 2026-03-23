@@ -558,6 +558,7 @@ export default function BookingsPage() {
         dayTours={dayTours}
         vehicles={vehicles}
         guides={guides}
+        getToken={getToken}
       />
 
       {/* Booking Detail Modal */}
