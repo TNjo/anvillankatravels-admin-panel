@@ -497,6 +497,12 @@ export default function InvoicesPage() {
         <InvoicePreview
           invoice={previewInvoice}
           onClose={() => setPreviewInvoice(null)}
+          onStatusUpdate={(updatedInvoice) => {
+            setInvoices(invoices.map((inv) => 
+              inv.id === updatedInvoice.id ? updatedInvoice : inv
+            ));
+            setPreviewInvoice(updatedInvoice);
+          }}
         />
       )}
     </div>

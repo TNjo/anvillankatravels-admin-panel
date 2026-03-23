@@ -1,16 +1,58 @@
 "use client";
 
-import { useRef } from "react";
-import { X, Printer, Download, Mail } from "lucide-react";
+import { useRef, useState } from "react";
+import { X, Printer, Download, Mail, Send, Loader2, CheckCircle } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
+import { toast } from "sonner";
 import type { Invoice } from "@/types";
 
 interface InvoicePreviewProps {
   invoice: Invoice;
   onClose: () => void;
+  onStatusUpdate?: (invoice: Invoice) => void;
 }
 
-export default function InvoicePreview({ invoice, onClose }: InvoicePreviewProps) {
+export default function InvoicePreview({ invoice, onClose, onStatusUpdate }: InvoicePreviewProps) {
+  const { getToken } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSendEmail = async () => {
+    setSending(true);
+    try {
+      const token = await getToken();
+      const res = await fetch("/api/send-invoice", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          invoiceId: invoice.id,
+          recipientEmail: invoice.customerEmail,
+          recipientName: invoice.customerName,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSent(true);
+        toast.success(`Invoice sent to ${invoice.customerEmail}`);
+        if (onStatusUpdate) {
+          onStatusUpdate({ ...invoice, status: "sent" });
+        }
+      } else {
+        toast.error(data.error || "Failed to send invoice");
+      }
+    } catch (error) {
+      console.error("Error sending invoice:", error);
+      toast.error("Failed to send invoice");
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -83,7 +125,7 @@ export default function InvoicePreview({ invoice, onClose }: InvoicePreviewProps
     handlePrint();
   };
 
-  const handleSendEmail = () => {
+  const handleOpenMailClient = () => {
     const subject = encodeURIComponent(`Invoice ${invoice.invoiceNumber} - Anvil Lanka Travels`);
     const body = encodeURIComponent(
       `Dear ${invoice.customerName},\n\nPlease find attached your invoice ${invoice.invoiceNumber} for ${invoice.tourName}.\n\nTotal Amount: ${invoice.currency} ${invoice.totalAmount.toLocaleString()}\nDue Date: ${invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "Upon receipt"}\n\nThank you for choosing Anvil Lanka Travels!\n\nBest regards,\nAnvil Lanka Travels Team`
@@ -107,26 +149,56 @@ export default function InvoicePreview({ invoice, onClose }: InvoicePreviewProps
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-gray-50 px-4 py-3">
           <h2 className="text-lg font-semibold text-gray-900">Invoice Preview</h2>
           <div className="flex items-center gap-2">
+            {/* Send to Customer Button */}
             <button
               onClick={handleSendEmail}
+              disabled={sending || sent || invoice.status === "paid"}
+              className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                sent
+                  ? "bg-green-100 text-green-700 cursor-default"
+                  : invoice.status === "paid"
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-primary-600 text-white hover:bg-primary-700"
+              } disabled:opacity-70`}
+            >
+              {sending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : sent ? (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  Sent!
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Send to Customer
+                </>
+              )}
+            </button>
+            <div className="h-6 w-px bg-gray-300" />
+            <button
+              onClick={handleOpenMailClient}
               className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              title="Open in email client"
             >
               <Mail className="h-4 w-4" />
-              Email
             </button>
             <button
               onClick={handleDownloadPDF}
               className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              title="Download PDF"
             >
               <Download className="h-4 w-4" />
-              Download
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700"
+              className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              title="Print"
             >
               <Printer className="h-4 w-4" />
-              Print
             </button>
             <button
               onClick={onClose}
