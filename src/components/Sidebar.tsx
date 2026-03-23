@@ -19,6 +19,8 @@ import {
   Camera,
   Car,
   UserCircle,
+  CalendarDays,
+  FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
@@ -26,10 +28,12 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/dashboard/tours", label: "Tour Packages", icon: Map },
   { href: "/dashboard/hotels", label: "Hotels", icon: Building2 },
   { href: "/dashboard/day-tours", label: "Day Tours", icon: Sun },
   { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck },
+  { href: "/dashboard/invoices", label: "Invoices", icon: FileText },
   { href: "/dashboard/vehicles", label: "Vehicles", icon: Car },
   { href: "/dashboard/tour-guides", label: "Tour Guides", icon: UserCircle },
   { href: "/dashboard/travel-memories", label: "Travel Memories", icon: Camera },

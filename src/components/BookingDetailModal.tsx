@@ -1,6 +1,7 @@
 "use client";
 
-import { X, Mail, Phone, MapPin, Calendar, Users, CreditCard, FileText, Car, UserCircle } from "lucide-react";
+import { X, Mail, Phone, MapPin, Calendar, Users, CreditCard, FileText, Car, UserCircle, Receipt } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { Booking } from "@/types";
 import { formatDate } from "@/lib/utils";
 
@@ -8,6 +9,7 @@ interface BookingDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   booking: Booking | null;
+  onGenerateInvoice?: (booking: Booking) => void;
 }
 
 const statusBadge: Record<string, string> = {
@@ -29,8 +31,34 @@ export default function BookingDetailModal({
   isOpen,
   onClose,
   booking,
+  onGenerateInvoice,
 }: BookingDetailModalProps) {
+  const router = useRouter();
+
   if (!isOpen || !booking) return null;
+
+  const handleGenerateInvoice = () => {
+    if (onGenerateInvoice) {
+      onGenerateInvoice(booking);
+    } else {
+      const params = new URLSearchParams({
+        bookingId: booking.id,
+        customerName: booking.customerName,
+        customerEmail: booking.customerEmail,
+        customerPhone: booking.customerPhone || "",
+        customerCountry: booking.customerCountry || "",
+        tourName: booking.tourName,
+        tourType: booking.tourType,
+        startDate: booking.preferredDate,
+        endDate: booking.endDate || "",
+        totalPrice: booking.totalPrice?.toString() || "",
+        depositPaid: booking.depositPaid?.toString() || "",
+        currency: booking.currency || "USD",
+      });
+      router.push(`/dashboard/invoices?create=true&${params.toString()}`);
+      onClose();
+    }
+  };
 
   const formatCurrency = (amount: number | undefined, currency: string | undefined) => {
     if (amount === undefined || amount === 0) return "—";
@@ -294,12 +322,21 @@ export default function BookingDetailModal({
 
         {/* Footer */}
         <div className="sticky bottom-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-6 py-4">
-          <button
-            onClick={onClose}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-          >
-            Close
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+            >
+              Close
+            </button>
+            <button
+              onClick={handleGenerateInvoice}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+            >
+              <Receipt className="h-4 w-4" />
+              Generate Invoice
+            </button>
+          </div>
         </div>
       </div>
     </div>
