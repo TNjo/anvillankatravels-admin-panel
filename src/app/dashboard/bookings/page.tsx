@@ -128,6 +128,29 @@ export default function BookingsPage() {
 
   if (permLoading || !authorized) return null;
 
+  const sendConfirmationEmail = async (bookingId: string, customerEmail: string) => {
+    if (!customerEmail) return;
+    try {
+      const token = await getToken();
+      const emailRes = await fetch("/api/send-booking-confirmation", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bookingId }),
+      });
+      const emailData = await emailRes.json();
+      if (emailData.success) {
+        toast.success(`Confirmation email sent to ${customerEmail}`);
+      } else {
+        toast.error("Failed to send confirmation email");
+      }
+    } catch {
+      toast.error("Failed to send confirmation email");
+    }
+  };
+
   const updateStatus = async (id: string, status: string) => {
     try {
       const token = await getToken();
@@ -141,6 +164,7 @@ export default function BookingsPage() {
       });
 
       if (res.ok) {
+        const currentBooking = bookings.find((b) => b.id === id);
         if (filterStatus !== "all" && status !== filterStatus) {
           setBookings(bookings.filter((b) => b.id !== id));
         } else {
@@ -151,6 +175,10 @@ export default function BookingsPage() {
           );
         }
         toast.success(`Booking ${status}`);
+
+        if (status === "confirmed" && currentBooking && currentBooking.status !== "confirmed") {
+          sendConfirmationEmail(id, currentBooking.customerEmail);
+        }
       }
     } catch {
       toast.error("Failed to update booking");
@@ -179,6 +207,10 @@ export default function BookingsPage() {
             )
           );
           toast.success("Booking updated successfully");
+
+          if (bookingData.status === "confirmed" && selectedBooking.status !== "confirmed") {
+            sendConfirmationEmail(selectedBooking.id, selectedBooking.customerEmail);
+          }
         } else {
           throw new Error("Failed to update");
         }
@@ -196,6 +228,10 @@ export default function BookingsPage() {
           const newBooking = await res.json();
           setBookings([newBooking, ...bookings]);
           toast.success("Booking created successfully");
+
+          if (newBooking.status === "confirmed" && newBooking.customerEmail) {
+            sendConfirmationEmail(newBooking.id, newBooking.customerEmail);
+          }
         } else {
           throw new Error("Failed to create");
         }
@@ -532,6 +568,37 @@ export default function BookingsPage() {
           setSelectedBooking(null);
         }}
         booking={selectedBooking}
+        onSendConfirmationEmail={async (booking) => {
+          try {
+            const token = await getToken();
+            const res = await fetch("/api/send-booking-confirmation", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ bookingId: booking.id }),
+            });
+            const data = await res.json();
+            if (data.success) {
+              toast.success(`Confirmation email sent to ${booking.customerEmail}`);
+              setBookings(
+                bookings.map((b) =>
+                  b.id === booking.id
+                    ? { ...b, confirmationEmailSent: true, confirmationEmailSentAt: new Date().toISOString() }
+                    : b
+                )
+              );
+              return true;
+            } else {
+              toast.error(data.error || "Failed to send confirmation email");
+              return false;
+            }
+          } catch {
+            toast.error("Failed to send confirmation email");
+            return false;
+          }
+        }}
       />
     </div>
   );

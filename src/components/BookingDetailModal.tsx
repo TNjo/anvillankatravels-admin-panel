@@ -1,6 +1,7 @@
 "use client";
 
-import { X, Mail, Phone, MapPin, Calendar, Users, CreditCard, FileText, Car, UserCircle, Receipt } from "lucide-react";
+import { useState } from "react";
+import { X, Mail, Phone, MapPin, Calendar, Users, CreditCard, FileText, Car, UserCircle, Receipt, Send, Loader2, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Booking } from "@/types";
 import { formatDate } from "@/lib/utils";
@@ -10,6 +11,7 @@ interface BookingDetailModalProps {
   onClose: () => void;
   booking: Booking | null;
   onGenerateInvoice?: (booking: Booking) => void;
+  onSendConfirmationEmail?: (booking: Booking) => Promise<boolean>;
 }
 
 const statusBadge: Record<string, string> = {
@@ -32,10 +34,24 @@ export default function BookingDetailModal({
   onClose,
   booking,
   onGenerateInvoice,
+  onSendConfirmationEmail,
 }: BookingDetailModalProps) {
   const router = useRouter();
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   if (!isOpen || !booking) return null;
+
+  const handleSendConfirmationEmail = async () => {
+    if (!onSendConfirmationEmail || sendingEmail) return;
+    setSendingEmail(true);
+    try {
+      const success = await onSendConfirmationEmail(booking);
+      if (success) setEmailSent(true);
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   const handleGenerateInvoice = () => {
     if (onGenerateInvoice) {
@@ -329,6 +345,22 @@ export default function BookingDetailModal({
             >
               Close
             </button>
+            {booking.status === "confirmed" && onSendConfirmationEmail && (
+              <button
+                onClick={handleSendConfirmationEmail}
+                disabled={sendingEmail}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-cyan-600 dark:border-cyan-500 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 disabled:opacity-50"
+              >
+                {sendingEmail ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : emailSent || booking.confirmationEmailSent ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                {emailSent || booking.confirmationEmailSent ? "Resend Confirmation" : "Send Confirmation Email"}
+              </button>
+            )}
             <button
               onClick={handleGenerateInvoice}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"

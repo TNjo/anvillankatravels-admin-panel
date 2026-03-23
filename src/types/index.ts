@@ -176,6 +176,8 @@ export interface Booking {
     phone: string;
     languages: string[];
   };
+  confirmationEmailSent?: boolean;
+  confirmationEmailSentAt?: string;
   createdAt: string;
   updatedAt: string;
 }
