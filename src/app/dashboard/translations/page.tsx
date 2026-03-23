@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/AuthProvider";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 
 interface TranslationStatus {
   [docId: string]: {
@@ -49,6 +50,7 @@ type ContentTab = "tours" | "dayTours";
 
 export default function TranslationsPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("translations");
   const [activeTab, setActiveTab] = useState<ContentTab>("tours");
   const [documents, setDocuments] = useState<DocumentInfo[]>([]);
   const [translationStatus, setTranslationStatus] =
@@ -104,6 +106,8 @@ export default function TranslationsPage() {
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
+
+  if (permLoading || !authorized) return null;
 
   const loadTranslation = async (doc: DocumentInfo, lang: string) => {
     setSelectedDoc(doc);

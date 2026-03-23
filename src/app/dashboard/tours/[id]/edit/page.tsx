@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2, Save, GripVertical, Package, Pencil, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { Tour, TourDay, PlaceToStay, Hotel, TourFAQ } from "@/types";
 import ImageUpload from "@/components/ImageUpload";
 
@@ -14,6 +15,7 @@ export default function EditTourPage() {
   const router = useRouter();
   const params = useParams();
   const tourId = params.id as string;
+  const { authorized, loading: permLoading } = useRequirePermission("tours");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -94,6 +96,8 @@ export default function EditTourPage() {
     }
     fetchTour();
   }, [tourId]);
+
+  if (permLoading || !authorized) return null;
 
   const addArrayItem = (field: "route" | "tags" | "highlights") => {
     setForm({ ...form, [field]: [...form[field], ""] });

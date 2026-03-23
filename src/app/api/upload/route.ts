@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { adminStorage } from "@/lib/firebase-admin";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAnyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAnyAdminPermission(request);
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const formData = await request.formData();

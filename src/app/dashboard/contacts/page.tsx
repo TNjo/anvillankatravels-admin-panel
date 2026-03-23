@@ -23,6 +23,7 @@ import {
   Plane,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import { formatDate } from "@/lib/utils";
 import type { Contact } from "@/types";
 
@@ -30,6 +31,7 @@ type TabType = "all" | "inquiry" | "tailor-made";
 
 export default function ContactsPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("contacts");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -63,6 +65,8 @@ export default function ContactsPage() {
   useEffect(() => {
     fetchContacts(filterStatus, activeTab);
   }, [filterStatus, activeTab]);
+
+  if (permLoading || !authorized) return null;
 
   const markAsRead = async (contact: Contact) => {
     if (contact.status !== "unread") return;

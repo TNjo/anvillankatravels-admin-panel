@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 
 const DOC_PATH = "config/siteSettings";
 
 export async function GET(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "settings");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const doc = await adminDb.doc(DOC_PATH).get();
@@ -21,8 +22,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "settings");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const body = await request.json();

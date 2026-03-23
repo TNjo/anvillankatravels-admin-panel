@@ -16,10 +16,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { TravelMemory } from "@/types";
 
 export default function TravelMemoriesPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("travel-memories");
   const [memories, setMemories] = useState<TravelMemory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,6 +50,8 @@ export default function TravelMemoriesPage() {
   useEffect(() => {
     fetchMemories();
   }, []);
+
+  if (permLoading || !authorized) return null;
 
   const handleDelete = async (id: string) => {
     try {

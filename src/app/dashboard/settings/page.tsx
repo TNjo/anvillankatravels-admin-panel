@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { Settings, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { SiteSettings } from "@/types";
 
 const defaultSettings: SiteSettings = {
@@ -21,6 +22,7 @@ const defaultSettings: SiteSettings = {
 
 export default function SettingsPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("settings");
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,8 @@ export default function SettingsPage() {
     }
     fetchSettings();
   }, [getToken]);
+
+  if (permLoading || !authorized) return null;
 
   const handleSave = async () => {
     setSaving(true);

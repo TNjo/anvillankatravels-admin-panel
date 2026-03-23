@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
+import { isSuperAdmin } from "@/lib/admin";
 
 const tours = [
   {
@@ -475,6 +476,7 @@ const dayTours = [
 export async function POST(request: NextRequest) {
   const user = await verifyAuth(request);
   if (!user) return unauthorizedResponse();
+  if (!isSuperAdmin(user.email)) return forbiddenResponse();
 
   try {
     const now = new Date().toISOString();

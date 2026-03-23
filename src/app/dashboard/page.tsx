@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { Map, Sun, CalendarCheck, MessageSquare, TrendingUp, Users } from "lucide-react";
+import type { AdminModule } from "@/types";
 
 interface Stats {
   totalTours: number;
@@ -13,9 +14,12 @@ interface Stats {
 }
 
 export default function DashboardPage() {
-  const { getToken } = useAuth();
+  const { getToken, adminRole } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const hasAccess = (module: AdminModule) =>
+    adminRole?.isSuperAdmin || adminRole?.permissions.includes(module) || false;
 
   useEffect(() => {
     async function fetchStats() {
@@ -41,43 +45,77 @@ export default function DashboardPage() {
       label: "Tour Packages",
       value: stats?.totalTours ?? 0,
       icon: Map,
-      color: "bg-blue-500",
       bgColor: "bg-blue-50 dark:bg-blue-900/30",
       textColor: "text-blue-700 dark:text-blue-400",
+      module: "tours" as AdminModule,
     },
     {
       label: "Day Tours",
       value: stats?.totalDayTours ?? 0,
       icon: Sun,
-      color: "bg-amber-500",
       bgColor: "bg-amber-50 dark:bg-amber-900/30",
       textColor: "text-amber-700 dark:text-amber-400",
+      module: "day-tours" as AdminModule,
     },
     {
       label: "Total Bookings",
       value: stats?.totalBookings ?? 0,
       icon: CalendarCheck,
-      color: "bg-green-500",
       bgColor: "bg-green-50 dark:bg-green-900/30",
       textColor: "text-green-700 dark:text-green-400",
+      module: "bookings" as AdminModule,
     },
     {
       label: "Pending Bookings",
       value: stats?.pendingBookings ?? 0,
       icon: TrendingUp,
-      color: "bg-orange-500",
       bgColor: "bg-orange-50 dark:bg-orange-900/30",
       textColor: "text-orange-700 dark:text-orange-400",
+      module: "bookings" as AdminModule,
     },
     {
       label: "Unread Messages",
       value: stats?.unreadContacts ?? 0,
       icon: MessageSquare,
-      color: "bg-purple-500",
       bgColor: "bg-purple-50 dark:bg-purple-900/30",
       textColor: "text-purple-700 dark:text-purple-400",
+      module: "contacts" as AdminModule,
     },
   ];
+
+  const quickActions = [
+    {
+      href: "/dashboard/tours",
+      label: "Manage Tours",
+      icon: Map,
+      iconColor: "text-primary-600 dark:text-primary-400",
+      module: "tours" as AdminModule,
+    },
+    {
+      href: "/dashboard/day-tours",
+      label: "Manage Day Tours",
+      icon: Sun,
+      iconColor: "text-amber-600 dark:text-amber-400",
+      module: "day-tours" as AdminModule,
+    },
+    {
+      href: "/dashboard/bookings",
+      label: "View Bookings",
+      icon: CalendarCheck,
+      iconColor: "text-green-600 dark:text-green-400",
+      module: "bookings" as AdminModule,
+    },
+    {
+      href: "/dashboard/contacts",
+      label: "View Messages",
+      icon: MessageSquare,
+      iconColor: "text-purple-600 dark:text-purple-400",
+      module: "contacts" as AdminModule,
+    },
+  ];
+
+  const visibleStats = statCards.filter((card) => hasAccess(card.module));
+  const visibleActions = quickActions.filter((action) => hasAccess(action.module));
 
   return (
     <div className="space-y-8">
@@ -88,54 +126,52 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {statCards.map((card) => (
-          <div key={card.label} className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  {card.label}
-                </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
-                  {loading ? (
-                    <span className="inline-block h-8 w-12 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-                  ) : (
-                    card.value
-                  )}
-                </p>
-              </div>
-              <div className={`rounded-xl ${card.bgColor} p-3`}>
-                <card.icon className={`h-6 w-6 ${card.textColor}`} />
+      {visibleStats.length > 0 && (
+        <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${visibleStats.length >= 4 ? "xl:grid-cols-" + Math.min(visibleStats.length, 5) : ""}`}>
+          {visibleStats.map((card) => (
+            <div key={card.label} className="card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    {card.label}
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+                    {loading ? (
+                      <span className="inline-block h-8 w-12 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+                    ) : (
+                      card.value
+                    )}
+                  </p>
+                </div>
+                <div className={`rounded-xl ${card.bgColor} p-3`}>
+                  <card.icon className={`h-6 w-6 ${card.textColor}`} />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="card">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-            Quick Actions
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <a href="/dashboard/tours" className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700">
-              <Map className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Manage Tours</span>
-            </a>
-            <a href="/dashboard/day-tours" className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700">
-              <Sun className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Manage Day Tours</span>
-            </a>
-            <a href="/dashboard/bookings" className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700">
-              <CalendarCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">View Bookings</span>
-            </a>
-            <a href="/dashboard/contacts" className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700">
-              <MessageSquare className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">View Messages</span>
-            </a>
+        {visibleActions.length > 0 && (
+          <div className="card">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              Quick Actions
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {visibleActions.map((action) => (
+                <a
+                  key={action.href}
+                  href={action.href}
+                  className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  <action.icon className={`h-5 w-5 ${action.iconColor}`} />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{action.label}</span>
+                </a>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="card">
           <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">

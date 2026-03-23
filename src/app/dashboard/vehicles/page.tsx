@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { Vehicle } from "@/types";
 
 const VEHICLE_TYPES = ["car", "van", "mini-bus", "bus", "suv", "luxury"] as const;
@@ -38,6 +39,7 @@ const typeLabels: Record<string, string> = {
 
 export default function VehiclesPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("vehicles");
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -70,6 +72,8 @@ export default function VehiclesPage() {
   useEffect(() => {
     fetchVehicles();
   }, [filterStatus]);
+
+  if (permLoading || !authorized) return null;
 
   const handleDelete = async (id: string) => {
     try {

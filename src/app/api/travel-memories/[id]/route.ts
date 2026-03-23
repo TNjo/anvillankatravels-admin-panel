@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 
 const COLLECTION = "travelMemories";
 
@@ -27,8 +27,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "travel-memories");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const { id } = await params;
@@ -51,8 +52,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "travel-memories");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const { id } = await params;

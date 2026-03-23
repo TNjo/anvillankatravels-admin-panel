@@ -19,29 +19,53 @@ import {
   Camera,
   Car,
   UserCircle,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { ThemeToggle } from "./ThemeToggle";
+import type { AdminModule } from "@/types";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/tours", label: "Tour Packages", icon: Map },
-  { href: "/dashboard/hotels", label: "Hotels", icon: Building2 },
-  { href: "/dashboard/day-tours", label: "Day Tours", icon: Sun },
-  { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck },
-  { href: "/dashboard/vehicles", label: "Vehicles", icon: Car },
-  { href: "/dashboard/tour-guides", label: "Tour Guides", icon: UserCircle },
-  { href: "/dashboard/travel-memories", label: "Travel Memories", icon: Camera },
-  { href: "/dashboard/contacts", label: "Messages", icon: MessageSquare },
-  { href: "/dashboard/translations", label: "Translations", icon: Languages },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  permission: AdminModule | null; // null = always visible
+  superAdminOnly?: boolean;
+}
+
+const navItems: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: null },
+  { href: "/dashboard/tours", label: "Tour Packages", icon: Map, permission: "tours" },
+  { href: "/dashboard/hotels", label: "Hotels", icon: Building2, permission: "hotels" },
+  { href: "/dashboard/day-tours", label: "Day Tours", icon: Sun, permission: "day-tours" },
+  { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck, permission: "bookings" },
+  { href: "/dashboard/vehicles", label: "Vehicles", icon: Car, permission: "vehicles" },
+  { href: "/dashboard/tour-guides", label: "Tour Guides", icon: UserCircle, permission: "tour-guides" },
+  { href: "/dashboard/travel-memories", label: "Travel Memories", icon: Camera, permission: "travel-memories" },
+  { href: "/dashboard/contacts", label: "Messages", icon: MessageSquare, permission: "contacts" },
+  { href: "/dashboard/translations", label: "Translations", icon: Languages, permission: "translations" },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, permission: "settings" },
+  { href: "/dashboard/admin-management", label: "Admin Management", icon: Shield, permission: null, superAdminOnly: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { logout, user } = useAuth();
+  const { logout, user, adminRole } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  const visibleItems = navItems.filter((item) => {
+    // Super admin only items
+    if (item.superAdminOnly) {
+      return adminRole?.isSuperAdmin === true;
+    }
+    // Always visible items (Dashboard)
+    if (item.permission === null) return true;
+    // Super admin sees everything
+    if (adminRole?.isSuperAdmin) return true;
+    // Check specific permission
+    return adminRole?.permissions.includes(item.permission) ?? false;
+  });
 
   return (
     <aside
@@ -89,7 +113,7 @@ export function Sidebar() {
       )}
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -122,6 +146,11 @@ export function Sidebar() {
               {user.displayName || "Admin"}
             </p>
             <p className="truncate text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+            {adminRole?.isSuperAdmin && (
+              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                Super Admin
+              </p>
+            )}
           </div>
         )}
         <button

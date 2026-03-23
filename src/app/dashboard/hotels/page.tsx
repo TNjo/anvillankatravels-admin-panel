@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { Plus, Pencil, Trash2, Search, Building2, Star, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { Hotel } from "@/types";
 
 export default function HotelsPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("hotels");
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -46,6 +48,8 @@ export default function HotelsPage() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [search, fetchHotels]);
+
+  if (permLoading || !authorized) return null;
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this hotel?")) return;

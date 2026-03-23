@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Sun } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { DayTour } from "@/types";
 
 export default function DayToursPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("day-tours");
   const [tours, setTours] = useState<DayTour[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -49,6 +51,8 @@ export default function DayToursPage() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [search, fetchDayTours]);
+
+  if (permLoading || !authorized) return null;
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this day tour?")) return;

@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { Tour, TourDay, PlaceToStay, TourFAQ } from "@/types";
 import ImageUpload from "@/components/ImageUpload";
 
 export default function NewTourPage() {
   const { getToken } = useAuth();
   const router = useRouter();
+  const { authorized, loading: permLoading } = useRequirePermission("tours");
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
@@ -34,6 +36,8 @@ export default function NewTourPage() {
   ]);
 
   const [faqs, setFaqs] = useState<TourFAQ[]>([]);
+
+  if (permLoading || !authorized) return null;
 
   const addArrayItem = (field: "route" | "tags" | "highlights") => {
     setForm({ ...form, [field]: [...form[field], ""] });

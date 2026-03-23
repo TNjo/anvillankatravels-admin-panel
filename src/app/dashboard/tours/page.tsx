@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Map as MapIcon, ChevronDown, ChevronRight, Package } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { Tour } from "@/types";
 
 export default function ToursPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("tours");
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -47,6 +49,8 @@ export default function ToursPage() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [search, fetchTours]);
+
+  if (permLoading || !authorized) return null;
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this tour?")) return;
