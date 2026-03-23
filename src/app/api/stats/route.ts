@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAnyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 import { getCached, setCache } from "@/lib/cache";
 
 interface StatsData {
@@ -12,8 +12,9 @@ interface StatsData {
 }
 
 export async function GET(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAnyAdminPermission(request);
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const cached = getCached<StatsData>("stats");

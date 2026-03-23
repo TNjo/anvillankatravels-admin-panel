@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAuth, verifyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 import type { Booking } from "@/types";
 
 const COLLECTION = "bookings";
 
 export async function GET(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "bookings");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const { searchParams } = new URL(request.url);
@@ -39,8 +40,9 @@ export async function POST(request: NextRequest) {
   const isAdminRequest = authHeader?.startsWith("Bearer ");
 
   if (isAdminRequest) {
-    const user = await verifyAuth(request);
+    const { user, authorized } = await verifyAdminPermission(request, "bookings");
     if (!user) return unauthorizedResponse();
+    if (!authorized) return forbiddenResponse();
   }
 
   try {

@@ -1,3 +1,43 @@
+// Admin RBAC types
+export type AdminModule =
+  | "tours"
+  | "hotels"
+  | "day-tours"
+  | "bookings"
+  | "vehicles"
+  | "tour-guides"
+  | "travel-memories"
+  | "contacts"
+  | "translations"
+  | "settings";
+
+export const ALL_ADMIN_MODULES: AdminModule[] = [
+  "tours",
+  "hotels",
+  "day-tours",
+  "bookings",
+  "vehicles",
+  "tour-guides",
+  "travel-memories",
+  "contacts",
+  "translations",
+  "settings",
+];
+
+export interface AdminRecord {
+  email: string;
+  name: string;
+  permissions: AdminModule[];
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
+
+export interface AdminRole {
+  isSuperAdmin: boolean;
+  permissions: AdminModule[];
+}
+
 export interface HotelRoomType {
   name: string;
   description: string;

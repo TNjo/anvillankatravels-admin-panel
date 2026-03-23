@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 import type { TravelMemory } from "@/types";
 
 const COLLECTION = "travelMemories";
@@ -49,8 +49,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "travel-memories");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const body = await request.json();

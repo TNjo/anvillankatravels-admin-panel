@@ -1,12 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
+import type { AdminRole } from "@/types";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  adminRole: AdminRole | null;
+  adminLoading: boolean;
   getToken: () => Promise<string | null>;
   logout: () => Promise<void>;
 }
@@ -14,6 +17,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  adminRole: null,
+  adminLoading: true,
   getToken: async () => null,
   logout: async () => {},
 });
@@ -21,14 +26,46 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
+  const [adminLoading, setAdminLoading] = useState(true);
+
+  const fetchAdminRole = useCallback(async (firebaseUser: User) => {
+    try {
+      setAdminLoading(true);
+      const token = await firebaseUser.getIdToken();
+      const res = await fetch("/api/admin/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAdminRole({
+          isSuperAdmin: data.isSuperAdmin,
+          permissions: data.permissions,
+        });
+      } else {
+        setAdminRole({ isSuperAdmin: false, permissions: [] });
+      }
+    } catch {
+      setAdminRole({ isSuperAdmin: false, permissions: [] });
+    } finally {
+      setAdminLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
       setLoading(false);
+
+      if (firebaseUser) {
+        fetchAdminRole(firebaseUser);
+      } else {
+        setAdminRole(null);
+        setAdminLoading(false);
+      }
     });
     return unsubscribe;
-  }, []);
+  }, [fetchAdminRole]);
 
   const getToken = async () => {
     if (!user) return null;
@@ -40,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, getToken, logout }}>
+    <AuthContext.Provider value={{ user, loading, adminRole, adminLoading, getToken, logout }}>
       {children}
     </AuthContext.Provider>
   );

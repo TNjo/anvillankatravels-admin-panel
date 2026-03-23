@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { DayTour, DayTourItineraryStep } from "@/types";
 import ImageUpload from "@/components/ImageUpload";
 
@@ -13,6 +14,7 @@ export default function EditDayTourPage() {
   const router = useRouter();
   const params = useParams();
   const tourId = params.id as string;
+  const { authorized, loading: permLoading } = useRequirePermission("day-tours");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -72,6 +74,8 @@ export default function EditDayTourPage() {
     }
     fetchTour();
   }, [tourId]);
+
+  if (permLoading || !authorized) return null;
 
   const addArrayItem = (field: "highlights" | "galleryImages" | "inclusions" | "exclusions" | "tags") => {
     setForm({ ...form, [field]: [...form[field], ""] });

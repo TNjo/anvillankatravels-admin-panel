@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { TourGuide } from "@/types";
 
 const STATUS_OPTIONS = ["available", "on-trip", "unavailable"] as const;
@@ -56,6 +57,7 @@ const statusBadge: Record<string, string> = {
 
 export default function TourGuidesPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("tour-guides");
   const [guides, setGuides] = useState<TourGuide[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -88,6 +90,8 @@ export default function TourGuidesPage() {
   useEffect(() => {
     fetchGuides();
   }, [filterStatus]);
+
+  if (permLoading || !authorized) return null;
 
   const handleDelete = async (id: string) => {
     try {

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import type { Booking, Tour, DayTour, Vehicle, TourGuide } from "@/types";
 import BookingModal from "@/components/BookingModal";
 import BookingDetailModal from "@/components/BookingDetailModal";
@@ -36,6 +37,7 @@ const paymentBadge: Record<string, string> = {
 
 export default function BookingsPage() {
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("bookings");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
   const [dayTours, setDayTours] = useState<DayTour[]>([]);
@@ -123,6 +125,8 @@ export default function BookingsPage() {
     fetchTours();
     fetchVehiclesAndGuides();
   }, [filterStatus]);
+
+  if (permLoading || !authorized) return null;
 
   const updateStatus = async (id: string, status: string) => {
     try {

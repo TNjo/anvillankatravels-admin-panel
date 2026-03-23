@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import HotelForm from "../../HotelForm";
 import type { Hotel } from "@/types";
 
 export default function EditHotelPage() {
   const { id } = useParams<{ id: string }>();
   const { getToken } = useAuth();
+  const { authorized, loading: permLoading } = useRequirePermission("hotels");
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +32,8 @@ export default function EditHotelPage() {
     }
     load();
   }, [id, getToken]);
+
+  if (permLoading || !authorized) return null;
 
   if (loading) {
     return (
