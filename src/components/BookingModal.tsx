@@ -159,14 +159,26 @@ export default function BookingModal({
     }
   };
 
+  const calculateEndDate = (startDate: string, durationDays: number): string => {
+    if (!startDate || !durationDays) return "";
+    const start = new Date(startDate);
+    start.setDate(start.getDate() + durationDays - 1);
+    return start.toISOString().split("T")[0];
+  };
+
   const handleTourSelect = (tourId: string) => {
     if (formData.tourType === "multi-day") {
       const selectedTour = tours.find((t) => t.id === tourId);
       if (selectedTour) {
+        const endDate =
+          selectedTour.duration?.days && formData.preferredDate
+            ? calculateEndDate(formData.preferredDate, selectedTour.duration.days)
+            : formData.endDate || "";
         setFormData({
           ...formData,
           tourId: selectedTour.id,
           tourName: selectedTour.name,
+          endDate,
         });
       }
     } else if (formData.tourType === "day-tour") {
@@ -179,6 +191,18 @@ export default function BookingModal({
         });
       }
     }
+  };
+
+  const handleStartDateChange = (date: string) => {
+    const selectedTour =
+      formData.tourType === "multi-day"
+        ? tours.find((t) => t.id === formData.tourId)
+        : null;
+    const endDate =
+      selectedTour?.duration?.days && date
+        ? calculateEndDate(date, selectedTour.duration.days)
+        : formData.endDate || "";
+    setFormData({ ...formData, preferredDate: date, endDate });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -288,9 +312,8 @@ export default function BookingModal({
               <input
                 type="date"
                 value={formData.preferredDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, preferredDate: e.target.value })
-                }
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) => handleStartDateChange(e.target.value)}
                 className="input"
                 required
               />
@@ -303,6 +326,7 @@ export default function BookingModal({
               <input
                 type="date"
                 value={formData.endDate}
+                min={formData.preferredDate || new Date().toISOString().split("T")[0]}
                 onChange={(e) =>
                   setFormData({ ...formData, endDate: e.target.value })
                 }
