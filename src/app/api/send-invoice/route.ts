@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 import { adminDb } from "@/lib/firebase-admin";
 
 let resend: Resend | null = null;
@@ -17,8 +17,9 @@ function getResend() {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "invoices");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const { invoiceId, recipientEmail, recipientName } = await request.json();

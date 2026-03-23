@@ -9,7 +9,9 @@ export type AdminModule =
   | "travel-memories"
   | "contacts"
   | "translations"
-  | "settings";
+  | "settings"
+  | "invoices"
+  | "calendar";
 
 export const ALL_ADMIN_MODULES: AdminModule[] = [
   "tours",
@@ -22,6 +24,8 @@ export const ALL_ADMIN_MODULES: AdminModule[] = [
   "contacts",
   "translations",
   "settings",
+  "invoices",
+  "calendar",
 ];
 
 export interface AdminRecord {

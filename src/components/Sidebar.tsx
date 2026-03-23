@@ -48,21 +48,9 @@ const navItems: NavItem[] = [
   { href: "/dashboard/contacts", label: "Messages", icon: MessageSquare, permission: "contacts" },
   { href: "/dashboard/translations", label: "Translations", icon: Languages, permission: "translations" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, permission: "settings" },
+  { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, permission: "calendar" },
+  { href: "/dashboard/invoices", label: "Invoices", icon: FileText, permission: "invoices" },
   { href: "/dashboard/admin-management", label: "Admin Management", icon: Shield, permission: null, superAdminOnly: true },
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays },
-  { href: "/dashboard/tours", label: "Tour Packages", icon: Map },
-  { href: "/dashboard/hotels", label: "Hotels", icon: Building2 },
-  { href: "/dashboard/day-tours", label: "Day Tours", icon: Sun },
-  { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck },
-  { href: "/dashboard/invoices", label: "Invoices", icon: FileText },
-  { href: "/dashboard/vehicles", label: "Vehicles", icon: Car },
-  { href: "/dashboard/tour-guides", label: "Tour Guides", icon: UserCircle },
-  { href: "/dashboard/travel-memories", label: "Travel Memories", icon: Camera },
-  { href: "/dashboard/contacts", label: "Messages", icon: MessageSquare },
-  { href: "/dashboard/translations", label: "Translations", icon: Languages },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {

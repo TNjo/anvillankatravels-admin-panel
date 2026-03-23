@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import {
   ChevronLeft,
   ChevronRight,
@@ -45,6 +46,7 @@ interface CalendarDay {
 }
 
 export default function CalendarPage() {
+  const { authorized: permAuthorized, loading: permLoading } = useRequirePermission("calendar");
   const { getToken } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -163,6 +165,8 @@ export default function CalendarPage() {
       </div>
     );
   }
+
+  if (permLoading || !permAuthorized) return null;
 
   return (
     <div className="space-y-6">

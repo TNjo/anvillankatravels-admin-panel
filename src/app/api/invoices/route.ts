@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifyAuth, unauthorizedResponse } from "@/lib/auth";
+import { verifyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 
 const COLLECTION = "invoices";
 
@@ -27,8 +27,9 @@ async function generateInvoiceNumber(): Promise<string> {
 }
 
 export async function GET(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "invoices");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const { searchParams } = new URL(request.url);
@@ -64,8 +65,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await verifyAuth(request);
+  const { user, authorized } = await verifyAdminPermission(request, "invoices");
   if (!user) return unauthorizedResponse();
+  if (!authorized) return forbiddenResponse();
 
   try {
     const data = await request.json();

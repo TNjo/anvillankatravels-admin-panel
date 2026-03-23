@@ -27,6 +27,8 @@ import {
   MessageSquare,
   Languages,
   Settings,
+  FileText,
+  CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AdminRecord, AdminModule } from "@/types";
@@ -43,6 +45,8 @@ const MODULE_LABELS: Record<AdminModule, string> = {
   contacts: "Messages",
   translations: "Translations",
   settings: "Settings",
+  invoices: "Invoices",
+  calendar: "Calendar",
 };
 
 const MODULE_ICONS: Record<AdminModule, React.ComponentType<{ className?: string }>> = {
@@ -56,6 +60,8 @@ const MODULE_ICONS: Record<AdminModule, React.ComponentType<{ className?: string
   contacts: MessageSquare,
   translations: Languages,
   settings: Settings,
+  invoices: FileText,
+  calendar: CalendarDays,
 };
 
 const MODULE_COLORS: Record<AdminModule, { badge: string; icon: string; selected: string }> = {
@@ -108,6 +114,16 @@ const MODULE_COLORS: Record<AdminModule, { badge: string; icon: string; selected
     badge: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
     icon: "text-gray-500 dark:text-gray-400",
     selected: "border-gray-400 bg-gray-50 ring-gray-200 dark:border-gray-500 dark:bg-gray-700/50 dark:ring-gray-700",
+  },
+  invoices: {
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    icon: "text-emerald-500 dark:text-emerald-400",
+    selected: "border-emerald-300 bg-emerald-50 ring-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/20 dark:ring-emerald-900/40",
+  },
+  calendar: {
+    badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+    icon: "text-rose-500 dark:text-rose-400",
+    selected: "border-rose-300 bg-rose-50 ring-rose-100 dark:border-rose-700 dark:bg-rose-900/20 dark:ring-rose-900/40",
   },
 };
 

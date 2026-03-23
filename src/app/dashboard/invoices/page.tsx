@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { useRequirePermission } from "@/lib/useRequirePermission";
 import {
   FileText,
   Plus,
@@ -44,6 +45,7 @@ const statusIcon: Record<string, React.ReactNode> = {
 };
 
 export default function InvoicesPage() {
+  const { authorized: permAuthorized, loading: permLoading } = useRequirePermission("invoices");
   const { getToken } = useAuth();
   const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -272,6 +274,8 @@ export default function InvoicesPage() {
       .filter((i) => ["sent", "partially-paid"].includes(i.status))
       .reduce((sum, i) => sum + i.balanceDue, 0),
   };
+
+  if (permLoading || !permAuthorized) return null;
 
   return (
     <div className="space-y-6">
