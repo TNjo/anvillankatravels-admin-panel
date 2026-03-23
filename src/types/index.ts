@@ -270,3 +270,46 @@ export interface TourGuide {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  bookingId: string;
+  bookingRef?: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  customerCountry?: string;
+  tourName: string;
+  tourType: "multi-day" | "day-tour" | "custom";
+  tourDates: {
+    start: string;
+    end?: string;
+  };
+  items: InvoiceItem[];
+  subtotal: number;
+  taxRate?: number;
+  taxAmount?: number;
+  discountAmount?: number;
+  discountDescription?: string;
+  totalAmount: number;
+  currency: string;
+  amountPaid: number;
+  balanceDue: number;
+  status: "draft" | "sent" | "paid" | "partially-paid" | "overdue" | "cancelled";
+  dueDate?: string;
+  notes?: string;
+  terms?: string;
+  issuedDate: string;
+  paidDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
