@@ -19,9 +19,21 @@ export default function InvoicePreview({ invoice, onClose, onStatusUpdate }: Inv
   const [sent, setSent] = useState(false);
 
   const handleSendEmail = async () => {
+    console.log("=== Send Invoice Email Started ===");
+    console.log("Invoice ID:", invoice.id);
+    console.log("Recipient:", invoice.customerEmail);
     setSending(true);
     try {
       const token = await getToken();
+      console.log("Auth token obtained:", token ? "yes" : "NO TOKEN");
+
+      if (!token) {
+        toast.error("Authentication failed. Please log in again.");
+        setSending(false);
+        return;
+      }
+
+      console.log("Sending API request...");
       const res = await fetch("/api/send-invoice", {
         method: "POST",
         headers: {
@@ -35,7 +47,9 @@ export default function InvoicePreview({ invoice, onClose, onStatusUpdate }: Inv
         }),
       });
 
+      console.log("API response status:", res.status);
       const data = await res.json();
+      console.log("API response data:", data);
 
       if (res.ok) {
         setSent(true);
@@ -44,11 +58,12 @@ export default function InvoicePreview({ invoice, onClose, onStatusUpdate }: Inv
           onStatusUpdate({ ...invoice, status: "sent" });
         }
       } else {
+        console.error("API error:", data);
         toast.error(data.error || "Failed to send invoice");
       }
     } catch (error) {
       console.error("Error sending invoice:", error);
-      toast.error("Failed to send invoice");
+      toast.error("Failed to send invoice. Check console for details.");
     } finally {
       setSending(false);
     }

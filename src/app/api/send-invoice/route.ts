@@ -22,7 +22,18 @@ export async function POST(request: NextRequest) {
   if (!authorized) return forbiddenResponse();
 
   try {
+    const apiKey = process.env.RESEND_API_KEY;
+    console.log("RESEND_API_KEY present:", apiKey ? `yes (starts with ${apiKey.substring(0, 5)}...)` : "NO");
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Email service not configured. Please add RESEND_API_KEY to environment variables." },
+        { status: 500 }
+      );
+    }
+
     const { invoiceId, recipientEmail, recipientName } = await request.json();
+    console.log("Request body:", { invoiceId, recipientEmail, recipientName });
 
     if (!invoiceId || !recipientEmail) {
       return NextResponse.json(
@@ -216,20 +227,25 @@ export async function POST(request: NextRequest) {
 </html>
     `;
 
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "Anvil Lanka Travels <noreply@anvillankatravels.com>";
+    console.log("Sending email from:", fromEmail, "to:", recipientEmail);
+
     const { data, error } = await getResend().emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "Anvil Lanka Travels <invoices@anvillankatravels.com>",
+      from: fromEmail,
       to: [recipientEmail],
       subject: `Invoice ${invoice.invoiceNumber} - Anvil Lanka Travels`,
       html: emailHtml,
     });
 
     if (error) {
-      console.error("Resend error:", error);
+      console.error("Resend API error:", JSON.stringify(error, null, 2));
       return NextResponse.json(
-        { error: "Failed to send email", details: error.message },
+        { error: `Email failed: ${error.message}`, details: error.name },
         { status: 500 }
       );
     }
+
+    console.log("Email sent successfully! Message ID:", data?.id);
 
     await adminDb.collection("invoices").doc(invoiceId).update({
       status: "sent",
@@ -241,10 +257,11 @@ export async function POST(request: NextRequest) {
       messageId: data?.id,
       message: `Invoice sent successfully to ${recipientEmail}`,
     });
-  } catch (error) {
-    console.error("Error sending invoice:", error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("Error sending invoice:", errMsg);
     return NextResponse.json(
-      { error: "Failed to send invoice email" },
+      { error: `Failed to send invoice: ${errMsg}` },
       { status: 500 }
     );
   }
