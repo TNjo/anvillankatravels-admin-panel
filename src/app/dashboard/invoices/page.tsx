@@ -19,6 +19,7 @@ import {
   AlertCircle,
   X,
   Loader2,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Invoice, InvoiceItem, Booking } from "@/types";
@@ -57,6 +58,7 @@ export default function InvoicesPage() {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
   const [prefillData, setPrefillData] = useState<Partial<Invoice> | null>(null);
 
   useEffect(() => {
@@ -251,6 +253,39 @@ export default function InvoicesPage() {
     }
   };
 
+  const handleSendToCustomer = async (invoice: Invoice) => {
+    setSendingId(invoice.id);
+    try {
+      const token = await getToken();
+      const res = await fetch("/api/send-invoice", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          invoiceId: invoice.id,
+          recipientEmail: invoice.customerEmail,
+          recipientName: invoice.customerName,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success(`Invoice sent to ${invoice.customerEmail}`);
+        fetchInvoices();
+      } else {
+        toast.error(data.error || "Failed to send invoice");
+      }
+    } catch (error) {
+      console.error("Error sending invoice:", error);
+      toast.error("Failed to send invoice email");
+    } finally {
+      setSendingId(null);
+    }
+  };
+
   const filteredInvoices = invoices.filter((invoice) => {
     const searchLower = search.toLowerCase();
     return (
@@ -405,7 +440,29 @@ export default function InvoicesPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    {/* Send to Customer - only show for draft or unsent invoices */}
+                    {invoice.status === "draft" && (
+                      <button
+                        onClick={() => handleSendToCustomer(invoice)}
+                        disabled={sendingId === invoice.id}
+                        className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700 disabled:opacity-60"
+                      >
+                        {sendingId === invoice.id ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Mail className="h-3.5 w-3.5" />
+                            Send to Customer
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {/* Other actions */}
                     <button
                       onClick={() => setPreviewInvoice(invoice)}
                       className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-700 dark:hover:text-blue-400"
@@ -413,15 +470,6 @@ export default function InvoicesPage() {
                     >
                       <Eye className="h-4 w-4" />
                     </button>
-                    {invoice.status === "draft" && (
-                      <button
-                        onClick={() => handleMarkAsSent(invoice)}
-                        className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-700 dark:hover:text-green-400"
-                        title="Mark as Sent"
-                      >
-                        <Send className="h-4 w-4" />
-                      </button>
-                    )}
                     {["sent", "partially-paid"].includes(invoice.status) && (
                       <button
                         onClick={() => handleMarkAsPaid(invoice)}

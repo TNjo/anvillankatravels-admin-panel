@@ -7,23 +7,33 @@ const COLLECTION = "invoices";
 async function generateInvoiceNumber(): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `INV-${year}-`;
-  
-  const snapshot = await adminDb
-    .collection(COLLECTION)
-    .where("invoiceNumber", ">=", prefix)
-    .where("invoiceNumber", "<", prefix + "\uf8ff")
-    .orderBy("invoiceNumber", "desc")
-    .limit(1)
-    .get();
 
-  if (snapshot.empty) {
-    return `${prefix}0001`;
+  try {
+    const snapshot = await adminDb
+      .collection(COLLECTION)
+      .orderBy("createdAt", "desc")
+      .limit(20)
+      .get();
+
+    if (snapshot.empty) {
+      return `${prefix}0001`;
+    }
+
+    let maxNumber = 0;
+    snapshot.docs.forEach((doc) => {
+      const inv = doc.data();
+      if (inv.invoiceNumber && inv.invoiceNumber.startsWith(prefix)) {
+        const num = parseInt(inv.invoiceNumber.split("-").pop() || "0");
+        if (num > maxNumber) maxNumber = num;
+      }
+    });
+
+    const newNumber = (maxNumber + 1).toString().padStart(4, "0");
+    return `${prefix}${newNumber}`;
+  } catch {
+    const timestamp = Date.now().toString().slice(-4);
+    return `${prefix}${timestamp}`;
   }
-
-  const lastInvoice = snapshot.docs[0].data();
-  const lastNumber = parseInt(lastInvoice.invoiceNumber.split("-").pop() || "0");
-  const newNumber = (lastNumber + 1).toString().padStart(4, "0");
-  return `${prefix}${newNumber}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -36,9 +46,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const bookingId = searchParams.get("bookingId");
 
-    let query: FirebaseFirestore.Query = adminDb
-      .collection(COLLECTION)
-      .orderBy("createdAt", "desc");
+    let query: FirebaseFirestore.Query = adminDb.collection(COLLECTION);
 
     if (status && status !== "all") {
       query = query.where("status", "==", status);
@@ -49,10 +57,16 @@ export async function GET(request: NextRequest) {
     }
 
     const snapshot = await query.get();
-    const invoices = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const invoices = snapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+        const aDate = (a.createdAt as string) || "";
+        const bDate = (b.createdAt as string) || "";
+        return bDate.localeCompare(aDate);
+      });
 
     return NextResponse.json(invoices);
   } catch (error) {
