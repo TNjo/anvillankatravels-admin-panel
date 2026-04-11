@@ -35,8 +35,10 @@ export default function EditTourPage() {
   const [placesToStay, setPlacesToStay] = useState<PlaceToStay[]>([]);
   const [itinerary, setItinerary] = useState<TourDay[]>([]);
   const [subPackages, setSubPackages] = useState<Tour[]>([]);
+  const [allTours, setAllTours] = useState<Tour[]>([]);
   const [allHotels, setAllHotels] = useState<Hotel[]>([]);
   const [faqs, setFaqs] = useState<TourFAQ[]>([]);
+  const [isParentTour, setIsParentTour] = useState(false);
 
   useEffect(() => {
     async function fetchTour() {
@@ -72,12 +74,21 @@ export default function EditTourPage() {
 
         // Fetch sub-packages if this is a parent tour (no parentTourName)
         if (!tour.parentTourName) {
+          setIsParentTour(true);
           const subRes = await fetch(`/api/tours?parentTourName=${encodeURIComponent(tour.name)}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (subRes.ok) {
             setSubPackages(await subRes.json());
           }
+        }
+
+        // Fetch all tours for sub-package assignment
+        const allToursRes = await fetch("/api/tours?all=true", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (allToursRes.ok) {
+          setAllTours(await allToursRes.json());
         }
 
         // Fetch all hotels for the hotel selector
@@ -98,6 +109,65 @@ export default function EditTourPage() {
   }, [tourId]);
 
   if (permLoading || !authorized) return null;
+
+  // Tours available to be assigned as sub-packages (not already assigned, not this tour, no parent, has itinerary)
+  const availableToursForSubPackage = allTours.filter((t) => 
+    t.id !== tourId && 
+    !t.parentTourName && 
+    t.itinerary && 
+    t.itinerary.length > 0 &&
+    !subPackages.some((s) => s.id === t.id)
+  );
+
+  const handleAssignSubPackage = async (subTourId: string) => {
+    try {
+      const token = await getToken();
+      const res = await fetch(`/api/tours/${subTourId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ parentTourName: form.name }),
+      });
+
+      if (res.ok) {
+        const assignedTour = allTours.find((t) => t.id === subTourId);
+        if (assignedTour) {
+          setSubPackages([...subPackages, { ...assignedTour, parentTourName: form.name }]);
+        }
+        toast.success("Sub-package assigned successfully");
+      } else {
+        toast.error("Failed to assign sub-package");
+      }
+    } catch {
+      toast.error("Failed to assign sub-package");
+    }
+  };
+
+  const handleUnassignSubPackage = async (subTourId: string) => {
+    if (!confirm("Remove this tour from sub-packages? The tour itself won't be deleted.")) return;
+    try {
+      const token = await getToken();
+      const res = await fetch(`/api/tours/${subTourId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ parentTourName: null }),
+      });
+
+      if (res.ok) {
+        setSubPackages(subPackages.filter((s) => s.id !== subTourId));
+        toast.success("Sub-package removed");
+      } else {
+        toast.error("Failed to remove sub-package");
+      }
+    } catch {
+      toast.error("Failed to remove sub-package");
+    }
+  };
 
   const addArrayItem = (field: "route" | "tags" | "highlights") => {
     setForm({ ...form, [field]: [...form[field], ""] });
@@ -211,7 +281,7 @@ export default function EditTourPage() {
             <label className="mb-1.5 block text-sm font-medium text-gray-700">Tour Name</label>
             <input type="text" className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </div>
-          {subPackages.length === 0 && (
+          {!isParentTour && (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700">Days</label>
@@ -240,17 +310,19 @@ export default function EditTourPage() {
         </div>
 
         {/* Sub-Packages */}
-        {subPackages.length > 0 && (
-          <div className="card space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-blue-500" />
-                <h2 className="text-lg font-semibold">Sub-Packages ({subPackages.length})</h2>
-              </div>
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-blue-500" />
+              <h2 className="text-lg font-semibold">Sub-Packages ({subPackages.length})</h2>
             </div>
-            <p className="text-sm text-gray-500">
-              These packages are shown as options when users click &quot;View Packages&quot; on this tour.
-            </p>
+          </div>
+          <p className="text-sm text-gray-500">
+            Assign existing tour itineraries as sub-packages. These will be shown as options when users click &quot;View Packages&quot; on this tour.
+          </p>
+          
+          {/* Existing sub-packages */}
+          {subPackages.length > 0 && (
             <div className="space-y-3">
               {subPackages.map((sub) => (
                 <div key={sub.id} className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50/50 p-4">
@@ -267,18 +339,50 @@ export default function EditTourPage() {
                       {sub.duration.days} days / {sub.duration.nights} nights &middot; {sub.route?.join(" → ")}
                     </p>
                   </div>
-                  <Link
-                    href={`/dashboard/tours/${sub.id}/edit`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-blue-600 shadow-sm transition-colors hover:bg-blue-50"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Edit
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/dashboard/tours/${sub.id}/edit`}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-blue-600 shadow-sm transition-colors hover:bg-blue-50"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleUnassignSubPackage(sub.id)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50"
+                      title="Remove from this parent"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Add sub-package selector */}
+          <div className="rounded-lg border border-dashed border-blue-300 bg-blue-50/30 p-4">
+            <label className="mb-2 block text-sm font-medium text-gray-700">Assign Existing Tour as Sub-Package</label>
+            <select
+              className="input"
+              value=""
+              onChange={(e) => {
+                if (e.target.value) handleAssignSubPackage(e.target.value);
+              }}
+            >
+              <option value="">+ Select a tour to assign...</option>
+              {availableToursForSubPackage.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} — {t.duration.days}D/{t.duration.nights}N
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-gray-500">
+              Only tours without a parent and with itinerary details are shown here.
+            </p>
           </div>
-        )}
+        </div>
 
         {/* Route */}
         <div className="card space-y-4">
@@ -311,8 +415,8 @@ export default function EditTourPage() {
           </div>
         </div>
 
-        {/* Highlights — hidden for parent tours with sub-packages */}
-        {subPackages.length === 0 && (
+        {/* Highlights — hidden for parent tours */}
+        {!isParentTour && (
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Highlights</h2>
@@ -327,8 +431,8 @@ export default function EditTourPage() {
           </div>
         )}
 
-        {/* Places to Stay — hidden for parent tours with sub-packages */}
-        {subPackages.length === 0 && (
+        {/* Places to Stay — hidden for parent tours */}
+        {!isParentTour && (
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Places to Stay</h2>
@@ -365,8 +469,8 @@ export default function EditTourPage() {
           </div>
         )}
 
-        {/* Itinerary — hidden for parent tours with sub-packages */}
-        {subPackages.length === 0 && (
+        {/* Itinerary — hidden for parent tours */}
+        {!isParentTour && (
           <div className="card space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Itinerary ({itinerary.length} days)</h2>

@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { verifyAdminPermission, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 
