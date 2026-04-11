@@ -569,6 +569,13 @@ export default function BookingsPage() {
           setSelectedBooking(null);
         }}
         booking={selectedBooking}
+        tours={tours}
+        onBookingUpdated={(updated) => {
+          setBookings(
+            bookings.map((b) => (b.id === updated.id ? updated : b))
+          );
+          setSelectedBooking(updated);
+        }}
         onSendConfirmationEmail={async (booking) => {
           try {
             const token = await getToken();

@@ -178,6 +178,9 @@ export interface Booking {
   };
   confirmationEmailSent?: boolean;
   confirmationEmailSentAt?: string;
+  itinerarySent?: boolean;
+  itinerarySentAt?: string;
+  itineraryNotes?: string;
   createdAt: string;
   updatedAt: string;
 }
