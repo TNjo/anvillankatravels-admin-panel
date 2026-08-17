@@ -29,6 +29,7 @@ import {
   Settings,
   FileText,
   CalendarDays,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AdminRecord, AdminModule } from "@/types";
@@ -47,6 +48,7 @@ const MODULE_LABELS: Record<AdminModule, string> = {
   settings: "Settings",
   invoices: "Invoices",
   calendar: "Calendar",
+  locations: "Locations",
 };
 
 const MODULE_ICONS: Record<AdminModule, React.ComponentType<{ className?: string }>> = {
@@ -62,6 +64,7 @@ const MODULE_ICONS: Record<AdminModule, React.ComponentType<{ className?: string
   settings: Settings,
   invoices: FileText,
   calendar: CalendarDays,
+  locations: MapPin,
 };
 
 const MODULE_COLORS: Record<AdminModule, { badge: string; icon: string; selected: string }> = {
@@ -124,6 +127,11 @@ const MODULE_COLORS: Record<AdminModule, { badge: string; icon: string; selected
     badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
     icon: "text-rose-500 dark:text-rose-400",
     selected: "border-rose-300 bg-rose-50 ring-rose-100 dark:border-rose-700 dark:bg-rose-900/20 dark:ring-rose-900/40",
+  },
+  locations: {
+    badge: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400",
+    icon: "text-lime-500 dark:text-lime-400",
+    selected: "border-lime-300 bg-lime-50 ring-lime-100 dark:border-lime-700 dark:bg-lime-900/20 dark:ring-lime-900/40",
   },
 };
 
