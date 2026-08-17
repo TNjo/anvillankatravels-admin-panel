@@ -1,4 +1,6 @@
 ﻿import { NextRequest } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { verifyAuth, unauthorizedResponse, forbiddenResponse } from "@/lib/auth";
 import { isSuperAdmin } from "@/lib/admin";
 import { adminDb } from "@/lib/firebase-admin";
