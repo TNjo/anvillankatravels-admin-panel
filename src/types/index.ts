@@ -11,7 +11,8 @@ export type AdminModule =
   | "translations"
   | "settings"
   | "invoices"
-  | "calendar";
+  | "calendar"
+  | "locations";
 
 export const ALL_ADMIN_MODULES: AdminModule[] = [
   "tours",
@@ -26,6 +27,7 @@ export const ALL_ADMIN_MODULES: AdminModule[] = [
   "settings",
   "invoices",
   "calendar",
+  "locations",
 ];
 
 export interface AdminRecord {
@@ -319,6 +321,51 @@ export interface Invoice {
   terms?: string;
   issuedDate: string;
   paidDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Location types for destination details
+export interface LocationAttraction {
+  name: string;
+  description: string;
+  distance?: string;
+  duration?: string;
+  image?: string;
+}
+
+export interface LocationOpeningHours {
+  day: string;
+  openTime: string;
+  closeTime: string;
+  isClosed?: boolean;
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  briefDescription: string;
+  heroImage: string;
+  galleryImages: string[];
+  mapCoordinates: { lat: number; lng: number };
+  attractions: LocationAttraction[];
+  openingHours: LocationOpeningHours[];
+  dressCode?: string;
+  entranceFee?: {
+    local?: string;
+    foreign?: string;
+    children?: string;
+  };
+  bestTimeToVisit?: string;
+  tips?: string[];
+  facilities?: string[];
+  accessibility?: string;
+  averageVisitDuration?: string;
+  category: "cultural" | "natural" | "beach" | "wildlife" | "adventure" | "historical" | "religious";
+  tags: string[];
+  published: boolean;
   createdAt: string;
   updatedAt: string;
 }
