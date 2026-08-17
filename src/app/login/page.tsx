@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "@/lib/firebase-client";
+import { getClientAuth, getGoogleProvider } from "@/lib/firebase-client";
 import Image from "next/image";
 
 export default function LoginPage() {
@@ -16,7 +16,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signInWithPopup(auth, googleProvider);
+      const clientAuth = getClientAuth();
+      if (!clientAuth) {
+        throw new Error("Firebase is not configured");
+      }
+      await signInWithPopup(clientAuth, getGoogleProvider());
       router.push("/dashboard");
     } catch {
       setError("Google sign-in failed. Please try again.");

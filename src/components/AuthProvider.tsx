@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
-import { auth } from "@/lib/firebase-client";
+import { getClientAuth } from "@/lib/firebase-client";
 import type { AdminRole } from "@/types";
 
 interface AuthContextType {
@@ -53,7 +53,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const clientAuth = getClientAuth();
+    if (!clientAuth) {
+      setLoading(false);
+      setAdminLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(clientAuth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
 
@@ -73,7 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await signOut(auth);
+    const clientAuth = getClientAuth();
+    if (clientAuth) {
+      await signOut(clientAuth);
+    }
   };
 
   return (
