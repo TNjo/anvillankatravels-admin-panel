@@ -22,6 +22,7 @@ import {
   Shield,
   CalendarDays,
   FileText,
+  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: null },
   { href: "/dashboard/tours", label: "Tour Packages", icon: Map, permission: "tours" },
   { href: "/dashboard/hotels", label: "Hotels", icon: Building2, permission: "hotels" },
+  { href: "/dashboard/locations", label: "Locations", icon: MapPin, permission: "locations" },
   { href: "/dashboard/day-tours", label: "Day Tours", icon: Sun, permission: "day-tours" },
   { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck, permission: "bookings" },
   { href: "/dashboard/vehicles", label: "Vehicles", icon: Car, permission: "vehicles" },
